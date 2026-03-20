@@ -1,9 +1,17 @@
+require_relative 'chess_piece'
 class Board
-  attr_accessor :board_state, :turn
+  attr_accessor :board, :turn
   def initialize
-    @board_state = Array.new(8, Array.new(8, nil))
+    @board = Array.new(8, Array.new(8, nil))
     @turn = :white
     types = [:pawn, :rock, :knight, :bishop, :queen, :king]
+
+    @pawn_w = "\u2659"
+    @pawn_b = "\u265F"
+    @king_w = "\u2654"
+    @king_b = "\u265A"
+    @queen_w = "\u2655"
+    @queen_w = ""
   end
 
   def prepare_for_new_game
@@ -25,4 +33,28 @@ class Board
       @board[side][4] = Chess_piece.new(:king, colour, [4, side])
     end
   end
+
+  def render_board
+    puts "                           "
+    @board.each_with_index do |row, i|
+      to_render = []
+      row.each_with_index do |val, j|
+        if i+j == 0
+          to_render << "\e[48;2;240;217;181m   "
+          next
+        end
+        to_render << "\e[48;2;240;217;181m   " if (i+j).even?
+        to_render << "\e[0m   " if (i+j).odd?
+      end
+      to_render.each {|square| print square}
+      print "\e[0m"
+      print "\n"
+    end
+    puts "                           "
+  end
 end
+
+test = Board.new
+test.prepare_for_new_game
+test.render_board
+
