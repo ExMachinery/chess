@@ -2,22 +2,15 @@ require_relative 'chess_piece'
 class Board
   attr_accessor :board, :turn
   def initialize
-    @board = Array.new(8, Array.new(8, nil))
+    @board = Array.new(8) { Array.new(8, nil) }
     @turn = :white
     types = [:pawn, :rock, :knight, :bishop, :queen, :king]
-
-    @pawn_w = "\u2659"
-    @pawn_b = "\u265F"
-    @king_w = "\u2654"
-    @king_b = "\u265A"
-    @queen_w = "\u2655"
-    @queen_w = ""
   end
 
   def prepare_for_new_game
     8.times do |num|
-      @board[1][num] = Chess_piece.new(:pawn, :white, [1, num])
-      @board[6][num] = Chess_piece.new(:pawn, :black, [6, num])
+      @board[1][num] = Chess_piece.new(:pawn, :black, [1, num])
+      @board[6][num] = Chess_piece.new(:pawn, :white, [6, num])
     end
     
     2.times do |num|
@@ -35,22 +28,34 @@ class Board
   end
 
   def render_board
-    puts "                           "
+    piece = nil
+    puts "\n"
     @board.each_with_index do |row, i|
-      to_render = []
       row.each_with_index do |val, j|
+        if val
+          case val.type
+          when :pawn then val.colour == :white ? piece = "\u2659" : piece = "\u265F"
+          when :king then val.colour == :white ? piece = "\u2654" : piece = "\u265A"
+          when :queen then val.colour == :white ? piece = "\u2655" : piece = "\u265B"
+          when :rock then val.colour == :white ? piece = "\u2656" : piece = "\u265C"
+          when :bishop then val.colour == :white ? piece = "\u2657" : piece = "\u265D"
+          when :knight then val.colour == :white ? piece = "\u2658" : piece = "\u265E"
+          end
+        else
+          piece = " "
+        end
+
         if i+j == 0
-          to_render << "\e[48;2;240;217;181m   "
+          print "\e[48;2;240;217;181m #{piece} "
           next
         end
-        to_render << "\e[48;2;240;217;181m   " if (i+j).even?
-        to_render << "\e[0m   " if (i+j).odd?
+        print "\e[48;2;240;217;181m #{piece} " if (i+j).even?
+        print "\e[0m #{piece} " if (i+j).odd?
       end
-      to_render.each {|square| print square}
       print "\e[0m"
       print "\n"
     end
-    puts "                           "
+    puts "\n"
   end
 end
 
