@@ -52,7 +52,7 @@ class Chess_piece
         
         if row < 0 || row > 7
           skip_row_direction = true
-        else
+        elsif !skip_row_direction
           moves << [row, position[1]] if board[row][position[1]] == nil
           if !board[row][position[1]].nil? && board[row][position[1]].colour == self.colour
             skip_row_direction = true
@@ -69,7 +69,7 @@ class Chess_piece
 
         if column < 0 || column > 7
           skip_column_direction = true
-        else
+        elsif !skip_column_direction
           moves << [position[0], column] if board[position[0]][column] == nil
           if !board[position[0]][column].nil? && board[position[0]][column].colour == self.colour
             skip_column_direction = true
@@ -99,6 +99,13 @@ class Chess_piece
         end       
       end
     end
+    moves
+  end
+
+  def get_queen_moves(position, board)
+    moves = []
+    moves += get_rock_moves(position, board)
+    moves += get_bishop_moves(position, board)
     moves
   end
 
