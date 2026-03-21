@@ -1,13 +1,14 @@
+require_relative 'chess_piece'
 
 class UI
   def initialize
     
   end
-  
+
 
   def render_board(board)
     piece = nil
-    puts "\n"
+    print "\n"
     board.each_with_index do |row, i|
       row.each_with_index do |val, j|
         if val
@@ -33,6 +34,6 @@ class UI
       print "\e[0m"
       print "\n"
     end
-    puts "\n"
+    print "\n"
   end
 end
