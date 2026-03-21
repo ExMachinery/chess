@@ -56,6 +56,11 @@ class Chess_piece
           moves << [row, position[1]] if board[row][position[1]] == nil
           if !board[row][position[1]].nil? && board[row][position[1]].colour == self.colour
             skip_row_direction = true
+            #======
+            # Here could be castling logic, if there is white king with @castling == true
+            # This particular set of coordinates could be sent to Game as a "Castling" variant
+            # which could be suggested to player as a variant.
+            # =====
           elsif !board[row][position[1]].nil? && board[row][position[1]].colour != self.colour
             moves << [row, position[1]]
             skip_row_direction = true
@@ -73,6 +78,25 @@ class Chess_piece
             skip_column_direction = true
           end
         end
+      end
+    end
+    moves
+  end
+
+  def get_knight_moves(position, board)
+    row, column = position[0], position[1]
+    moves = []
+    [2, -2].each do |i|
+      [1, -1].each do |j|
+        a, b = row + i, column + j
+        if a >= 0 && a <= 7 && b >= 0 && b <= 7
+          moves << [a, b] if board[a][b].nil? || board[a][b].colour != self.colour
+        end
+
+        a, b = row + j, column + i
+        if a >= 0 && a <= 7 && b >= 0 && b <= 7
+          moves << [a, b] if board[a][b].nil? || board[a][b].colour != self.colour
+        end       
       end
     end
     moves

@@ -19,4 +19,13 @@ RSpec.describe Chess_piece do
       expect(test.get_rock_moves([1, 1], board)).to eql([[2, 1], [1, 2], [3, 1], [0, 1], [1, 0]])
     end
   end
+
+  describe " #get_knight_moves" do
+    it "returns correct moves" do
+      test = Chess_piece.new(:knight, :white, [1, 1])
+      board[0][3] = Chess_piece.new(:pawn, :white, [0, 3])
+      board[2][3] = Chess_piece.new(:pawn, :blach, [2, 3])
+      expect(test.get_knight_moves([1, 1], board)).to eql([[3, 2], [2, 3], [3, 0]])
+    end
+  end
 end
