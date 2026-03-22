@@ -61,4 +61,20 @@ RSpec.describe Chess_piece do
       expect(test.get_pawn_moves([1, 1], board)).to eql(nil)
     end
   end
+
+  describe " #get_king_moves" do
+    it "could calculate valid moves excluding under attack squares" do
+      test = Chess_piece.new(:king, :white, [1, 1])
+      test.castling = false
+      board[0][0] = Chess_piece.new(:rock, :black, [0, 0])
+      board[1][0] = Chess_piece.new(:pawn, :black, [1, 0])
+      board[0][2] = Chess_piece.new(:pawn, :white, [0, 2])
+      board[1][2] = Chess_piece.new(:pawn, :black, [1, 2])
+      board[1][4] = Chess_piece.new(:knight, :black, [1, 4])
+      board[7][5] = Chess_piece.new(:bishop, :black, [7, 5])
+      expect(test.get_king_moves([1, 1], board)).to eql([[0, 0], [1, 2], [2, 1]])
+    end
+
+  end
+
 end

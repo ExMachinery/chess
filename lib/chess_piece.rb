@@ -2,7 +2,7 @@ require_relative 'board'
 require_relative 'game'
 
 class Chess_piece
-  attr_accessor :type, :colour, :position, :en_passant, :castling
+  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack, :where_moved
   def initialize(type, colour, position)
     types = [:pawn, :rock, :knight, :bishop, :queen, :king]
     @type = type
@@ -11,9 +11,11 @@ class Chess_piece
     @castling = true if type == :rock || type == :king
     @queue = []
     @en_passant = nil
+    @under_attack = false
   end
 
-  def get_bishop_moves(position, board)
+  def get_bishop_moves(position, board, used_by_king = false)
+    for_king = false
     moves = []
     [1, -1].each do |i|
       [1, -1].each do |j|
@@ -31,14 +33,17 @@ class Chess_piece
           elsif !board[row][column].nil? && board[row][column].colour != self.colour
             done = true
             moves << [row, column]
+            for_king = true if board[row][column].type == :bishop || board[row][column] == :queen
           end
         end
       end
     end
+    return for_king if used_by_king
     moves
   end
 
-  def get_rock_moves(position, board)
+  def get_rock_moves(position, board, used_by_king = false)
+    for_king = false
     moves = []
     [1, -1].each do |i|
       skip_row_direction, skip_column_direction = false, false
@@ -60,6 +65,7 @@ class Chess_piece
             # =====
           elsif !board[row][position[1]].nil? && board[row][position[1]].colour != self.colour
             moves << [row, position[1]]
+            for_king = true if board[row][position[1]].type == :rock || board[row][position[1]].type == :queen
             skip_row_direction = true
           end
         end
@@ -72,30 +78,40 @@ class Chess_piece
             skip_column_direction = true
           elsif !board[position[0]][column].nil? && board[position[0]][column].colour != self.colour
             moves << [position[0], column]
+            for_king = true if board[position[0]][column].type == :rock || board[position[0]][column].type == :queen
             skip_column_direction = true
           end
         end
       end
     end
+    return for_king if used_by_king
     moves
   end
 
-  def get_knight_moves(position, board)
+  def get_knight_moves(position, board, used_by_king = false)
+    for_king = false
     row, column = position[0], position[1]
     moves = []
     [2, -2].each do |i|
       [1, -1].each do |j|
         a, b = row + i, column + j
         if a >= 0 && a <= 7 && b >= 0 && b <= 7
-          moves << [a, b] if board[a][b].nil? || board[a][b].colour != self.colour
+          if board[a][b].nil? || board[a][b].colour != self.colour
+            moves << [a, b] 
+            for_king = true if !board[a][b].nil? && board[a][b].type == :knight
+          end
         end
 
         a, b = row + j, column + i
         if a >= 0 && a <= 7 && b >= 0 && b <= 7
-          moves << [a, b] if board[a][b].nil? || board[a][b].colour != self.colour
-        end       
+          if board[a][b].nil? || board[a][b].colour != self.colour
+            moves << [a, b]
+            for_king = true if !board[a][b].nil? && board[a][b].type == :knight
+          end
+        end    
       end
     end
+    return for_king if used_by_king
     moves
   end
 
@@ -126,9 +142,72 @@ class Chess_piece
     end
     if !board[row][column - 1].nil? && board[row][column - 1].colour != self.colour && board[row][column - 1].en_passant == true
       moves << [row + direction, column - direction] if board[row + direction][column - direction].nil?
-    end
+    end   
     moves = nil if moves.empty?
     moves
+  end
+
+  def get_king_moves(position, board)
+    moves = []
+    row, column = position[0], position[1]
+    (-1..1).each do |i|
+      (-1..1).each do |j|
+        next if i == 0 && j == 0
+        a, b = row + i, column + j
+        next if a < 0 || a > 7 || b < 0 || b > 7
+        if board[a][b].nil? || board[a][b].colour != self.colour
+          moves << [a, b]
+        end
+      end
+    end
+
+    if self.castling && !self.under_attack
+      castling_position = check_castling(position, board)
+      if castling_position
+        moves += castling_position
+        # Here castling position could be sent to Game for additional UI features
+      end
+    end
+
+    final_moves = exclude_dangerous_king_moves(moves, board)
+    final_moves
+  end
+
+  def check_castling(position, board)
+    castling_position = []
+    check_on_left, check_on_right = false, false
+    row, column = position[0], position[1]
+    i = 1
+    until check_on_left && check_on_right
+      left = column + i if !check_on_left
+      right = column - i if !check_on_right
+      
+      if left < 0 || left > 7 || !board[row][left].nil? && !board[row][left].castling
+        check_on_left = true
+      elsif !board[row][left].nil? && board[row][right].castling
+        castling_position = [row, column + 2]
+        check_on_left = true
+      end
+
+      if right < 0 || right > 7 || !board[row][right].nil? && !board[row][left].castling
+        check_on_right = true
+      elsif !board[row][right].nil? && board[row][right].castling
+        castling_position = [row, column - 2]
+        check_on_right = true
+      end
+      i += 1
+    end
+    castling_position
+  end
+
+  def exclude_dangerous_king_moves(moves, board)
+    final_moves = moves.dup
+    moves.each do |move|
+      if get_bishop_moves(move, board, true) || get_knight_moves(move, board, true) || get_rock_moves(move, board, true)
+        final_moves.delete(move)
+      end
+    end
+    final_moves
   end
 
   def get_queen_moves(position, board)
