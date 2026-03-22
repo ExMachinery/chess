@@ -16,14 +16,14 @@ class Board
     2.times do |num|
       num == 0 ? side = 0 : side = 7
       num == 0 ? colour = :black : colour = :white
-      @board[side][0] = Chess_piece.new(:rock, colour, [0, side])
-      @board[side][7] = Chess_piece.new(:rock, colour, [7, side])
-      @board[side][1] = Chess_piece.new(:knight, colour, [1, side])
-      @board[side][6] = Chess_piece.new(:knight, colour, [6, side])
-      @board[side][2] = Chess_piece.new(:bishop, colour, [2, side])
-      @board[side][5] = Chess_piece.new(:bishop, colour, [5, side])
-      @board[side][3] = Chess_piece.new(:queen, colour, [3, side])
-      @board[side][4] = Chess_piece.new(:king, colour, [4, side])
+      @board[side][0] = Chess_piece.new(:rock, colour, [side, 0])
+      @board[side][7] = Chess_piece.new(:rock, colour, [side, 7])
+      @board[side][1] = Chess_piece.new(:knight, colour, [side, 1])
+      @board[side][6] = Chess_piece.new(:knight, colour, [side, 6])
+      @board[side][2] = Chess_piece.new(:bishop, colour, [side, 2])
+      @board[side][5] = Chess_piece.new(:bishop, colour, [side, 5])
+      @board[side][3] = Chess_piece.new(:queen, colour, [side, 3])
+      @board[side][4] = Chess_piece.new(:king, colour, [side, 4])
     end
   end
 end

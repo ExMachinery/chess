@@ -10,10 +10,7 @@ class Chess_piece
     @position = position
     @castling = true if type == :rock || type == :king
     @queue = []
-  end
-
-  def get_pawn_moves
-    
+    @en_passant = nil
   end
 
   def get_bishop_moves(position, board)
@@ -102,11 +99,42 @@ class Chess_piece
     moves
   end
 
+  def get_pawn_moves(position, board)
+    moves = []
+    row, column = position[0], position[1]
+    self.colour == :white ? direction = 1 : direction = -1
+
+    #Moving forward
+    if board[row + direction][column].nil?
+      moves << [row + direction, column] if row + direction >= 0 && row + direction <= 7
+      if row == 1 || row == 6
+        moves << [row + (2*direction), column] if board[row + (2*direction)][column].nil? 
+                                                  && row + (2*direction) >= 0 && row + (2*direction) <= 7
+      end
+    end
+
+    #Standard diagonal attack
+    if !board[row + direction][column + direction].nil? && board[row + direction][column + direction].colour != self.colour
+      moves << [row + direction, column + direction]
+    elsif !board[row + direction][column - direction].nil? && board[row + direction][column - direction].colour != self.colour
+      moves << [row + direction, column - direction]
+    end
+
+    #En passant
+    if !board[row][column + 1].nil? && board[row][column + 1].colour != self.colour && board[row][column + 1].en_passant == true
+      moves << [row + direction, column + direction] if board[row + direction][column + direction].nil?
+    end
+    if !board[row][column - 1].nil? && board[row][column - 1].colour != self.colour && board[row][column - 1].en_passant == true
+      moves << [row + direction, column - direction] if board[row + direction][column - direction].nil?
+    end
+    moves = nil if moves.empty?
+    moves
+  end
+
   def get_queen_moves(position, board)
     moves = []
     moves += get_rock_moves(position, board)
     moves += get_bishop_moves(position, board)
     moves
   end
-
 end
