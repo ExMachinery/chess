@@ -2,14 +2,12 @@ require_relative 'board'
 require_relative 'game'
 
 class Chess_piece
-  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack, :where_moved
+  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack
   def initialize(type, colour, position)
-    types = [:pawn, :rock, :knight, :bishop, :queen, :king]
     @type = type
     @colour = colour
     @position = position
-    @castling = true if type == :rock || type == :king
-    @queue = []
+    @castling = true if type == :rook || type == :king
     @en_passant = nil
     @under_attack = false
   end
@@ -42,7 +40,7 @@ class Chess_piece
     moves
   end
 
-  def get_rock_moves(position, board, used_by_king = false)
+  def get_rook_moves(position, board, used_by_king = false)
     for_king = false
     moves = []
     [1, -1].each do |i|
@@ -65,7 +63,7 @@ class Chess_piece
             # =====
           elsif !board[row][position[1]].nil? && board[row][position[1]].colour != self.colour
             moves << [row, position[1]]
-            for_king = true if board[row][position[1]].type == :rock || board[row][position[1]].type == :queen
+            for_king = true if board[row][position[1]].type == :rook || board[row][position[1]].type == :queen
             skip_row_direction = true
           end
         end
@@ -78,7 +76,7 @@ class Chess_piece
             skip_column_direction = true
           elsif !board[position[0]][column].nil? && board[position[0]][column].colour != self.colour
             moves << [position[0], column]
-            for_king = true if board[position[0]][column].type == :rock || board[position[0]][column].type == :queen
+            for_king = true if board[position[0]][column].type == :rook || board[position[0]][column].type == :queen
             skip_column_direction = true
           end
         end
@@ -208,7 +206,7 @@ class Chess_piece
     final_moves = moves.dup
     moves.each do |move|
       if get_bishop_moves(move, board, true) || get_knight_moves(move, board, true) 
-        || get_rock_moves(move, board, true) || get_king_moves(move, board, true)
+        || get_rook_moves(move, board, true) || get_king_moves(move, board, true)
         final_moves.delete(move)
       end
 
@@ -226,7 +224,7 @@ class Chess_piece
 
   def get_queen_moves(position, board)
     moves = []
-    moves += get_rock_moves(position, board)
+    moves += get_rook_moves(position, board)
     moves += get_bishop_moves(position, board)
     moves
   end

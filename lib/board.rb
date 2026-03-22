@@ -4,7 +4,7 @@ class Board
   def initialize
     @board = Array.new(8) { Array.new(8, nil) }
     @turn = :white
-    types = [:pawn, :rock, :knight, :bishop, :queen, :king]
+    types = [:pawn, :rook, :knight, :bishop, :queen, :king]
   end
 
   def prepare_for_new_game
@@ -16,8 +16,8 @@ class Board
     2.times do |num|
       num == 0 ? side = 0 : side = 7
       num == 0 ? colour = :black : colour = :white
-      @board[side][0] = Chess_piece.new(:rock, colour, [side, 0])
-      @board[side][7] = Chess_piece.new(:rock, colour, [side, 7])
+      @board[side][0] = Chess_piece.new(:rook, colour, [side, 0])
+      @board[side][7] = Chess_piece.new(:rook, colour, [side, 7])
       @board[side][1] = Chess_piece.new(:knight, colour, [side, 1])
       @board[side][6] = Chess_piece.new(:knight, colour, [side, 6])
       @board[side][2] = Chess_piece.new(:bishop, colour, [side, 2])

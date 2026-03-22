@@ -16,7 +16,7 @@ class UI
           when :pawn then val.colour == :white ? piece = "\u2659" : piece = "\u265F"
           when :king then val.colour == :white ? piece = "\u2654" : piece = "\u265A"
           when :queen then val.colour == :white ? piece = "\u2655" : piece = "\u265B"
-          when :rock then val.colour == :white ? piece = "\u2656" : piece = "\u265C"
+          when :rook then val.colour == :white ? piece = "\u2656" : piece = "\u265C"
           when :bishop then val.colour == :white ? piece = "\u2657" : piece = "\u265D"
           when :knight then val.colour == :white ? piece = "\u2658" : piece = "\u265E"
           end

@@ -13,10 +13,10 @@ RSpec.describe Chess_piece do
 
   describe "#get_rock_moves" do
     it "returns correct moves" do
-      test = Chess_piece.new(:rock, :white, [1, 1])
+      test = Chess_piece.new(:rook, :white, [1, 1])
       board[3][1] = Chess_piece.new(:pawn, :black, [3, 1])
       board[1][3] = Chess_piece.new(:pawn, :white, [1, 3])
-      expect(test.get_rock_moves([1, 1], board)).to eql([[2, 1], [1, 2], [3, 1], [0, 1], [1, 0]])
+      expect(test.get_rook_moves([1, 1], board)).to eql([[2, 1], [1, 2], [3, 1], [0, 1], [1, 0]])
     end
   end
 
@@ -66,7 +66,7 @@ RSpec.describe Chess_piece do
     it "could calculate valid moves excluding under attack squares" do
       test = Chess_piece.new(:king, :white, [1, 1])
       test.castling = false
-      board[0][0] = Chess_piece.new(:rock, :black, [0, 0])
+      board[0][0] = Chess_piece.new(:rook, :black, [0, 0])
       board[1][0] = Chess_piece.new(:pawn, :black, [1, 0])
       board[0][2] = Chess_piece.new(:pawn, :white, [0, 2])
       board[1][2] = Chess_piece.new(:pawn, :black, [1, 2])
@@ -77,9 +77,9 @@ RSpec.describe Chess_piece do
 
     it "could calculate valid moves against king and allow castling" do
       test = Chess_piece.new(:king, :white, [0, 3])
-      board[0][0] = Chess_piece.new(:rock, :white, [0, 0])
+      board[0][0] = Chess_piece.new(:rook, :white, [0, 0])
       board[0][6] = Chess_piece.new(:knight, :white, [0, 6])
-      board[0][7] = Chess_piece.new(:rock, :white, [0, 7])
+      board[0][7] = Chess_piece.new(:rook, :white, [0, 7])
       board[2][3] = Chess_piece.new(:king, :black, [2, 3])
       expect(test.get_king_moves([0, 3], board)).to eql([[0, 2], [0, 4], [0, 1]])
     end
