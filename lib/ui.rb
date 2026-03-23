@@ -4,6 +4,7 @@ require_relative 'board'
 class UI
   def initialize
     
+  
   end
 
 
@@ -49,10 +50,37 @@ class UI
     print "   A  B  C  D  E  F  G  H  "
     print "\n"
   end
+
+  def convert_notation(coordinates, notation)
+    digit_dictionary = ["8", "7", "6", "5", "4", "3", "2", "1"]
+    leter_dictionary = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    result = nil
+
+    # From digial to human
+    if notation == :to_human
+      x, y = coordinates[0], coordinates[1]
+      result = "#{leter_dictionary[y]}#{digit_dictionary[x]}"
+    end
+
+    # From human to digital
+    if notation == :to_machine
+      array = coordinates.downcase.split("").reverse
+      result = [digit_dictionary.index(array[0]), leter_dictionary.index(array[1])]
+    end
+    result
+  end
+
+
+
+  def print_piecelist(pieces, board)
+    
+  end
 end
 
-test = Board.new
-test.prepare_for_new_game
-ui = UI.new
-ui.render_board(test.board, [[2, 0], [3, 0]])
+# test = Board.new
+# test.prepare_for_new_game
+# ui = UI.new
+# ui.render_board(test.board, [[2, 0], [3, 0]])
 # print "\e[48;2;255;127;0m #{piece} "
+# puts ui.convert_notation([0, 0], :to_human)
+# p ui.convert_notation("E4", :to_machine)
