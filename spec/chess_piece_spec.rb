@@ -58,7 +58,7 @@ RSpec.describe Chess_piece do
       test = Chess_piece.new(:pawn, :white, [1, 1])
       board[1][0] = Chess_piece.new(:pawn, :black, [1, 0])
       board[2][1] = Chess_piece.new(:pawn, :black, [2, 1])
-      expect(test.get_pawn_moves([1, 1], board)).to eql(nil)
+      expect(test.get_pawn_moves([1, 1], board)).to eql([])
     end
   end
 

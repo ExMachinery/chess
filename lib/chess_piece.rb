@@ -70,11 +70,6 @@ class Chess_piece
           moves << [row, position[1]] if board[row][position[1]] == nil
           if !board[row][position[1]].nil? && board[row][position[1]].colour == self.colour
             skip_row_direction = true
-            #======
-            # Here could be castling logic, if there is white king with @castling == true
-            # This particular set of coordinates could be sent to Game as a "Castling" variant
-            # which could be suggested to player as a variant.
-            # =====
           elsif !board[row][position[1]].nil? && board[row][position[1]].colour != self.colour
             moves << [row, position[1]]
             for_king = true if board[row][position[1]].type == :rook || board[row][position[1]].type == :queen
@@ -198,14 +193,14 @@ class Chess_piece
       if left >= 0 && left <= 7 && !board[row][left].nil? && !board[row][left].castling
         check_on_left = true
       elsif !board[row][left].nil? && board[row][left].castling
-        castling_position = [row, column + 2]
+        castling_position = [row, column + 2] 
         check_on_left = true
       end
 
       if right >= 0 && right <= 7 && !board[row][right].nil? && !board[row][right].castling
         check_on_right = true
       elsif !board[row][right].nil? && board[row][right].castling
-        castling_position = [row, column - 2]
+        castling_position = [row, column - 2] 
         check_on_right = true
       end
       i += 1
