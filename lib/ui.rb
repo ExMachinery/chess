@@ -1,4 +1,5 @@
 require_relative 'chess_piece'
+require_relative 'board'
 
 class UI
   def initialize
@@ -6,10 +7,13 @@ class UI
   end
 
 
-  def render_board(board)
+  def render_board(board, moves = [])
     piece = nil
+    counter = 8
     print "\n"
     board.each_with_index do |row, i|
+      print "#{counter} "
+      counter -= 1
       row.each_with_index do |val, j|
         if val
           case val.type
@@ -25,15 +29,30 @@ class UI
         end
 
         if i+j == 0
-          print "\e[48;2;240;217;181m #{piece} "
+          if moves.include?([i, j])
+            print "\e[48;2;255;127;0m #{piece} "
+          else
+            print "\e[48;2;240;217;181m #{piece} "
+          end
           next
         end
-        print "\e[48;2;240;217;181m #{piece} " if (i+j).even?
-        print "\e[0m #{piece} " if (i+j).odd?
+        if moves.include?([i, j])
+          print "\e[48;2;255;127;0m #{piece} "
+        else
+          print "\e[48;2;240;217;181m #{piece} " if (i+j).even?
+          print "\e[0m #{piece} " if (i+j).odd?
+        end
       end
       print "\e[0m"
       print "\n"
     end
+    print "   A  B  C  D  E  F  G  H  "
     print "\n"
   end
 end
+
+# test = Board.new
+# test.prepare_for_new_game
+# ui = UI.new
+# ui.render_board(test.board, [[1, 0], [2, 0], [3, 0]])
+# print "\e[48;2;255;127;0m #{piece} "
