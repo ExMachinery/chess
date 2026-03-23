@@ -51,8 +51,8 @@ class UI
   end
 end
 
-# test = Board.new
-# test.prepare_for_new_game
-# ui = UI.new
-# ui.render_board(test.board, [[1, 0], [2, 0], [3, 0]])
+test = Board.new
+test.prepare_for_new_game
+ui = UI.new
+ui.render_board(test.board, [[2, 0], [3, 0]])
 # print "\e[48;2;255;127;0m #{piece} "
