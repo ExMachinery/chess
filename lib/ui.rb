@@ -73,14 +73,26 @@ class UI
 
 
   def print_piecelist(pieces, board)
-    
+    counter = 0
+    pieces.each do |piece|
+      x, y = piece[0], piece[1]
+      coordinate = convert_notation(piece, :to_human)
+      print "\e[48;2;169;169;169m  #{board[x][y].type.to_s.capitalize} #{coordinate.upcase}  "
+      print "\e[0m  "
+      counter += 1
+      if counter == 8
+        print "\n\n"
+      end
+    end
   end
 end
 
-# test = Board.new
-# test.prepare_for_new_game
-# ui = UI.new
+test = Board.new
+test.prepare_for_new_game
+ui = UI.new
 # ui.render_board(test.board, [[2, 0], [3, 0]])
 # print "\e[48;2;255;127;0m #{piece} "
 # puts ui.convert_notation([0, 0], :to_human)
 # p ui.convert_notation("E4", :to_machine)
+pieces = [[0,0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7]]
+ui.print_piecelist(pieces, test.board)
