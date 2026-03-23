@@ -12,6 +12,20 @@ class Chess_piece
     @under_attack = false
   end
 
+  def get_moves(position, board)
+    moves = []
+    a, b = position[0], position[1]
+    case board[a][b].type
+    when :pawn then moves = get_pawn_moves(position, board)
+    when :rook then moves = get_rook_moves(position, board)
+    when :knight then moves = get_knight_moves(position, board)
+    when :bishop then moves = get_bishop_moves(position, board)
+    when :queen then moves = get_queen_moves(position, board)
+    when :king then moves = get_king_moves(position, board)
+    end
+    moves
+  end
+  
   def get_bishop_moves(position, board, used_by_king = false)
     for_king = false
     moves = []
@@ -123,7 +137,6 @@ class Chess_piece
       moves << [row + direction, column] if row + direction >= 0 && row + direction <= 7
       if row == 1 || row == 6
         moves << [row + (2*direction), column] if board[row + (2*direction)][column].nil? 
-                                                  && row + (2*direction) >= 0 && row + (2*direction) <= 7
       end
     end
 
@@ -141,7 +154,6 @@ class Chess_piece
     if !board[row][column - 1].nil? && board[row][column - 1].colour != self.colour && board[row][column - 1].en_passant == true
       moves << [row + direction, column - direction] if board[row + direction][column - direction].nil?
     end   
-    moves = nil if moves.empty?
     moves
   end
 
@@ -164,7 +176,6 @@ class Chess_piece
 
     if self.castling && !self.under_attack
       castling_position = check_castling(position, board)
-      p castling_position
       if castling_position
         moves << castling_position
         # Here castling position could be sent to Game for additional UI features
@@ -210,6 +221,7 @@ class Chess_piece
         final_moves.delete(move)
       end
 
+      # Excluding squares under attack by enemy pawns
       row, column = move[0], move[1]
       self.colour == :white ? direction = -1 : direction = 1
       if !board[row + direction][column + 1].nil? && board[row + direction][column + 1].type == :pawn
