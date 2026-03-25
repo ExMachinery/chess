@@ -5,9 +5,16 @@ require_relative 'player'
 class UI
   def initialize
     
-  
   end
 
+  def get_new_players_name
+    p1, p2 = nil, nil
+    puts "White player, what is your nickname?"
+    p1 = gets.chomp
+    puts "Black player, what is your nickname?"
+    p2 = gets.chomp
+    return [p1, p2]
+  end
 
   def render_board(board, moves = [])
     piece = nil
