@@ -24,7 +24,11 @@ class Game
       pieces = get_remaining_pieces(@board.state, @board.turn)
       transition = ensure_transition(pieces)
       pick, moves = transition[0], transition[1]
-      destination = ui.get_move(moves, @board.state)
+      if pick == :exit
+        # Here check for "Exit & Save the game" needed
+      end
+      
+      destination = ui.get_player_move(moves, @board.state)
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
       @board.state[pick[0]][pick[1]] = nil
       if king_not_in_danger?
@@ -42,6 +46,14 @@ class Game
             transform_pawn(transited_piece.position, @board.state)  
           end
         end
+        check_condition = transited_piece.get_moves(transited_piece.position, @board.state)
+        if transited_piece.colour == :white
+          @board.state[@black_king[0]][@black_king[1]].under_attack = true if check_condition.include?(@black_king)
+        elsif transited_piece.colour == :black
+          @board.state[@white_king[0]][@white_king[1]].under_attack = true if check_condition.include?(@white_king)
+        end
+        @board.turn = :black
+        # This is infinite cycle now. Exit condition needed (Check/Mate, Mate, Save)
       else
         @board.state[pick[0]][pick[1]] = piece_in_transit
         # UI Method to alert on king in danger
@@ -75,7 +87,7 @@ class Game
         # Here is save game method and exit condition
       end
       moves = @board.state[pick[0]][pick[1]].get_moves(pick, @board.state)
-      if moves = []
+      if moves.empty?
         ui.clear
         ui.alert_piece_block(pick, @board.state)
       else
@@ -92,7 +104,9 @@ class Game
   end
 
   def transform_pawn(position, board)
-    
+    x, y = position[0], position[1]
+    player_choice = ui.choose_piece
+    @board[x][y] = Chess_piece.new(player_choice, board.turn, [x, y])
   end
 
 end
