@@ -1,5 +1,6 @@
 require_relative 'chess_piece'
 require_relative 'board'
+require_relative 'player'
 
 class UI
   def initialize
@@ -70,8 +71,6 @@ class UI
     result
   end
 
-
-
   def print_piecelist(pieces, board)
     counter = 0
     pieces.each do |piece|
@@ -80,19 +79,42 @@ class UI
       print "\e[48;2;169;169;169m  #{board[x][y].type.to_s.capitalize} #{coordinate.upcase}  "
       print "\e[0m  "
       counter += 1
-      if counter == 8
+      if counter == 4
         print "\n\n"
+        counter = 0
       end
     end
+  end
+
+  def get_player_move(player, pieces, board)
+    # puts "#{player.name} (#{player.colour}), pick a chess piece. 'Exit' for abort game."
+    pick = nil
+    valid = false
+    until valid
+      input = gets.chomp.downcase
+      if input == "exit"
+        return nil
+      elsif input.match?(/\A[a-h][1-8]\z/i)
+        pick = convert_notation(input, :to_machine)
+        if pieces.include?(pick)
+          valid = true
+          next
+        end
+        puts "You cant move those"
+      else
+        puts "Invalid pick. Try again! Use letter coordinate frist and digit coordinate second (like 'E2')"
+      end
+    end
+    pick
+  end
+
+  def clear
+    system("clear")
   end
 end
 
 test = Board.new
 test.prepare_for_new_game
 ui = UI.new
-# ui.render_board(test.board, [[2, 0], [3, 0]])
-# print "\e[48;2;255;127;0m #{piece} "
-# puts ui.convert_notation([0, 0], :to_human)
-# p ui.convert_notation("E4", :to_machine)
-pieces = [[0,0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7]]
-ui.print_piecelist(pieces, test.board)
+ui.get_player_move("Billy", [[1, 0]], test.board)
+
