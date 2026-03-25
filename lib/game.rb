@@ -22,7 +22,7 @@ class Game
     done = false
     until done
       pieces = get_remaining_pieces(@board.state, @board.turn)
-
+      moves = ensure_pick(pieces)
     end
 
   end
@@ -37,6 +37,28 @@ class Game
       end
     end
     pieces
+  end
+
+  def ensure_pick(pieces)
+    moves = nil
+    checked = false
+    until checked
+      @ui.render_board(@board.state)
+      @ui.print_piecelist(pieces, @board.state)
+      @board.turn == :white ? pick = @ui.get_pick(@p1, pieces, @board.state) : pick = ui.get_pick(@p2, pieces, @board.state)
+      if !pick
+        checked = true
+        # Here is save game method and exit condition
+      end
+      moves = @board.state[pick[0]][pick[1]].get_moves(pick, @board.state)
+      if moves = []
+        ui.clear
+        ui.alert_piece_block(pick, @board.state)
+      else
+        checked = true
+      end
+    end
+    moves
   end
 
 end

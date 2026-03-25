@@ -115,7 +115,7 @@ class UI
     pick
   end
 
-  def get_move(player, moves, board)
+  def get_move(moves, board)
     move = nil
     puts "Choose where you want to move from orange squares. Type 'c' to Cancel."
     valid = false
@@ -135,6 +135,12 @@ class UI
       end
     end
     move
+  end
+
+  def alert_piece_block(position, board)
+    for_human_location = convert_notation(position, :to_human)
+    x, y = position[1], position[2]
+    puts "#{board[x][y].type.to_s.capitalize} on #{for_human_location} is blocked and have no moves. Try another one."
   end
 
   def clear
