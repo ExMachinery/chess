@@ -143,6 +143,33 @@ class UI
     puts "#{board[x][y].type.to_s.capitalize} on #{for_human_location} is blocked and have no moves. Try another one."
   end
 
+  def choose_figure
+    result = nil
+    puts "Choose your new figure, which will replase your pawn."
+    print "\n"
+    print "\e[48;2;169;169;169m  1. QUEEN  "
+    print "\e[0m  "
+    print "\e[48;2;169;169;169m  2. ROOK  "
+    print "\e[0m  "
+    print "\e[48;2;169;169;169m  3. KNIGHT  "
+    print "\e[0m  "
+    print "\e[48;2;169;169;169m  4. BISHOP  "
+    print "\e[0m  "
+    print "\n"
+    until result
+      input = gets.chomp
+      case input.to_i
+      when 1 then result = :queen
+      when 2 then result = :rook
+      when 3 then result = :knight
+      when 4 then result = :bishop
+      else
+        puts "Invalid input. Please, try again."
+      end
+    end
+    result
+  end
+
   def clear
     system("clear")
   end
