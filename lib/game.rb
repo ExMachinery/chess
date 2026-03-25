@@ -22,7 +22,30 @@ class Game
     done = false
     until done
       pieces = get_remaining_pieces(@board.state, @board.turn)
-      moves = ensure_pick(pieces)
+      transition = ensure_transition(pieces)
+      pick, moves = transition[0], transition[1]
+      destination = ui.get_move(moves, @board.state)
+      piece_in_transit = @board.state[pick[0]][pick[1]].dup
+      @board.state[pick[0]][pick[1]] = nil
+      if king_not_in_danger?
+        @board.state[destination[0]][destination[1]] = piece_in_transit.dup
+        transited_piece = @board.state[destination[0]][destination[1]].
+        transited_piece.position = [destination[0], destination[1]]
+        transited_piece.castling = false if transited_piece.castling
+        case transited_piece.type
+        when :king 
+          transited_piece.colour == :white ? @white_king = [destination[0], destination[1]] : @black_king = [destination[0], destination[1]]
+        when :pawn 
+          transited_piece.en_passant = true if [-2, 2].include?(pick[0] - destination[0])
+          if (transited_piece.colour == :white && transited_piece.positon[0] == 0) 
+            || (transited_piece.colour == :black && transited_piece.positon[0] == 7)
+            transform_pawn(transited_piece.position, @board.state)  
+          end
+        end
+      else
+        @board.state[pick[0]][pick[1]] = piece_in_transit
+        # UI Method to alert on king in danger
+      end
     end
 
   end
@@ -39,7 +62,8 @@ class Game
     pieces
   end
 
-  def ensure_pick(pieces)
+  def ensure_transition(pieces)
+    pick = nil
     moves = nil
     checked = false
     until checked
@@ -58,7 +82,17 @@ class Game
         checked = true
       end
     end
-    moves
+    return [pick, moves]
+  end
+
+  def king_not_in_danger?(turn)
+    turn == :white ? check = @white_king : check = @black_king
+    result = @board.state[check[0]][check[1]].exclude_dangerous_king_moves([check], @board.state)
+    result ? true : false
+  end
+
+  def transform_pawn(position, board)
+    
   end
 
 end
