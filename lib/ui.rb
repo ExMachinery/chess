@@ -86,8 +86,8 @@ class UI
     end
   end
 
-  def get_player_move(player, pieces, board)
-    # puts "#{player.name} (#{player.colour}), pick a chess piece. 'Exit' for abort game."
+  def get_pick(player, pieces, board)
+    puts "#{player.name} (#{player.colour}), pick a chess piece. 'Exit' for abort game."
     pick = nil
     valid = false
     until valid
@@ -106,6 +106,28 @@ class UI
       end
     end
     pick
+  end
+
+  def get_move(player, moves, board)
+    move = nil
+    puts "Choose where you want to move from orange squares. Type 'c' to Cancel."
+    valid = false
+    until valid
+      input = gets.chomp.downcase
+      if input == 'c'
+        move = false
+        valid = true
+      elsif input.match?(/\A[a-h][1-8]\z/i)
+        move_for_check = convert_notation(input, :to_machine)
+        if moves.include?(move_for_check)
+          move = move_for_check
+          valid = true
+        else
+          puts "This can't be done. Try again."
+        end
+      end
+    end
+    move
   end
 
   def clear
