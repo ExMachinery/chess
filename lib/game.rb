@@ -21,13 +21,18 @@ class Game
     
     done = false
     until done
+      # Here should be check-mate and mate condition verification
+      
+      # Here should be CHECK! alert if king under attack after previous player turn.
+
       pieces = get_remaining_pieces(@board.state, @board.turn)
       transition = ensure_transition(pieces)
       pick, moves = transition[0], transition[1]
       if pick == :exit
         # Here check for "Exit & Save the game" needed
+        system("exit") # Temporary
       end
-      
+
       destination = ui.get_player_move(moves, @board.state)
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
       @board.state[pick[0]][pick[1]] = nil
@@ -82,9 +87,10 @@ class Game
       @ui.render_board(@board.state)
       @ui.print_piecelist(pieces, @board.state)
       @board.turn == :white ? pick = @ui.get_pick(@p1, pieces, @board.state) : pick = ui.get_pick(@p2, pieces, @board.state)
-      if !pick
+      if pick == false
         checked = true
-        # Here is save game method and exit condition
+        pick = :exit
+        return [pick, nil]
       end
       moves = @board.state[pick[0]][pick[1]].get_moves(pick, @board.state)
       if moves.empty?
