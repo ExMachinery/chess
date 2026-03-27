@@ -91,6 +91,7 @@ class UI
         counter = 0
       end
     end
+    print "\n"
   end
 
   def get_pick(player, pieces, board)
@@ -100,7 +101,7 @@ class UI
     until valid
       input = gets.chomp.downcase
       if input == "exit"
-        return nil
+        return :exit
       elsif input.match?(/\A[a-h][1-8]\z/i)
         pick = convert_notation(input, :to_machine)
         if pieces.include?(pick)
@@ -139,7 +140,7 @@ class UI
 
   def alert_piece_block(position, board)
     for_human_location = convert_notation(position, :to_human)
-    x, y = position[1], position[2]
+    x, y = position[0], position[1]
     puts "#{board[x][y].type.to_s.capitalize} on #{for_human_location} is blocked and have no moves. Try another one."
   end
 
@@ -170,13 +171,18 @@ class UI
     result
   end
 
+  # This alert should triggers when player trying to move piece which protect king from attack (preventing instant loose)
+  def alert_king_is_vulnerable
+    puts "Move cannot be done because king is protected from attack by this piece. Try another one."
+  end
+
   def clear
     system("clear")
   end
 end
 
-test = Board.new
-test.prepare_for_new_game
-ui = UI.new
-ui.get_player_move("Billy", [[1, 0]], test.board)
+# test = Board.new
+# test.prepare_for_new_game
+# ui = UI.new
+# ui.get_player_move("Billy", [[1, 0]], test.board)
 

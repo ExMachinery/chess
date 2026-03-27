@@ -125,7 +125,7 @@ class Chess_piece
   def get_pawn_moves(position, board)
     moves = []
     row, column = position[0], position[1]
-    self.colour == :white ? direction = 1 : direction = -1
+    self.colour == :white ? direction = -1 : direction = 1
 
     #Moving forward
     if board[row + direction][column].nil?

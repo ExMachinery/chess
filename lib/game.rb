@@ -8,11 +8,11 @@ class Game
   def initialize
     @board = Board.new
     # Load save game logic here
-    board.prepare_for_new_game
+    @board.prepare_for_new_game
     @white_king = [7, 4]
     @black_king = [0, 4]
     @ui = UI.new
-    player_nicknames = ui.get_new_players_name
+    player_nicknames = @ui.get_new_players_name
     @p1 = Player.new(player_nicknames[0], :white)
     @p2 = Player.new(player_nicknames[1], :black)
   end
@@ -33,12 +33,14 @@ class Game
         system("exit") # Temporary
       end
 
-      destination = ui.get_player_move(moves, @board.state)
+      @ui.clear
+      @ui.render_board(@board.state, moves)
+      destination = @ui.get_player_move(moves, @board.state)
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
       @board.state[pick[0]][pick[1]] = nil
-      if king_not_in_danger?
+      if king_not_in_danger?(@board.turn)
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
-        transited_piece = @board.state[destination[0]][destination[1]].
+        transited_piece = @board.state[destination[0]][destination[1]]
         transited_piece.position = [destination[0], destination[1]]
         transited_piece.castling = false if transited_piece.castling
         case transited_piece.type
@@ -46,8 +48,8 @@ class Game
           transited_piece.colour == :white ? @white_king = [destination[0], destination[1]] : @black_king = [destination[0], destination[1]]
         when :pawn 
           transited_piece.en_passant = true if [-2, 2].include?(pick[0] - destination[0])
-          if (transited_piece.colour == :white && transited_piece.positon[0] == 0) 
-            || (transited_piece.colour == :black && transited_piece.positon[0] == 7)
+          if (transited_piece.colour == :white && transited_piece.position[0] == 0) 
+            || (transited_piece.colour == :black && transited_piece.position[0] == 7)
             transform_pawn(transited_piece.position, @board.state)  
           end
         end
@@ -57,11 +59,12 @@ class Game
         elsif transited_piece.colour == :black
           @board.state[@white_king[0]][@white_king[1]].under_attack = true if check_condition.include?(@white_king)
         end
-        @board.turn = :black
+        @board.turn == :white ? @board.turn = :black : @board.turn = :white
         # This is infinite cycle now. Exit condition needed (Check/Mate, Mate, Save)
       else
         @board.state[pick[0]][pick[1]] = piece_in_transit
-        # UI Method to alert on king in danger
+        @ui.clear
+        @ui.alert_king_is_vulnerable
       end
     end
 
@@ -86,16 +89,15 @@ class Game
     until checked
       @ui.render_board(@board.state)
       @ui.print_piecelist(pieces, @board.state)
-      @board.turn == :white ? pick = @ui.get_pick(@p1, pieces, @board.state) : pick = ui.get_pick(@p2, pieces, @board.state)
-      if pick == false
+      @board.turn == :white ? pick = @ui.get_pick(@p1, pieces, @board.state) : pick = @ui.get_pick(@p2, pieces, @board.state)
+      if pick == :exit
         checked = true
-        pick = :exit
         return [pick, nil]
       end
       moves = @board.state[pick[0]][pick[1]].get_moves(pick, @board.state)
       if moves.empty?
-        ui.clear
-        ui.alert_piece_block(pick, @board.state)
+        @ui.clear
+        @ui.alert_piece_block(pick, @board.state)
       else
         checked = true
       end
@@ -111,7 +113,7 @@ class Game
 
   def transform_pawn(position, board)
     x, y = position[0], position[1]
-    player_choice = ui.choose_piece
+    player_choice = @ui.choose_piece
     @board[x][y] = Chess_piece.new(player_choice, board.turn, [x, y])
   end
 
