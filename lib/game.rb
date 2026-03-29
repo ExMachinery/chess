@@ -82,12 +82,22 @@ class Game
       row.each do |square|
         next if !square
         if square.colour == turn
-          pieces << square.position
-          square.en_passant = false if square.en_passant
+          solve_en_passant(board, square) if square.en_passant
+          pieces << square.position if board[square.position[0]][square.position[1]]
         end
       end
     end
     pieces
+  end
+
+  def solve_en_passant (board, square)
+    square.colour == :white ? direction = 1 : direction = -1
+    x, y = square.position[0], square.position[1]
+    if board[x + direction][y]
+      board[x][y] = nil
+    else
+      square.en_passant = false
+    end
   end
 
   def ensure_transition(pieces)
