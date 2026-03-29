@@ -26,16 +26,22 @@ class Game
       # Here should be CHECK! alert if king under attack after previous player turn.
 
       pieces = get_remaining_pieces(@board.state, @board.turn)
-      transition = ensure_transition(pieces)
-      pick, moves = transition[0], transition[1]
-      if pick == :exit
-        # Here check for "Exit & Save the game" needed
-        system("exit") # Temporary
+      
+      # Get player valid pick and destination.
+      destination, pick, moves = nil, nil, nil
+      until destination
+        transition = ensure_transition(pieces)
+        pick, moves = transition[0], transition[1]
+        if pick == :exit
+          # Here check for "Exit & Save the game" needed
+          system("exit") # Temporary
+        end
+        
+        @ui.clear
+        @ui.render_board(@board.state, moves)
+        destination = @ui.get_player_move(moves, @board.state)
       end
 
-      @ui.clear
-      @ui.render_board(@board.state, moves)
-      destination = @ui.get_player_move(moves, @board.state)
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
       @board.state[pick[0]][pick[1]] = nil
       if king_not_in_danger?(@board.turn)
@@ -75,8 +81,10 @@ class Game
     board.each do |row|
       row.each do |square|
         next if !square
-        pieces << square.position if square.colour == turn
-        square.en_passant = false if square.type == :pawn && square.en_passant
+        if square.colour == turn
+          pieces << square.position
+          square.en_passant = false if square.en_passant
+        end
       end
     end
     pieces

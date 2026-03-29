@@ -143,13 +143,22 @@ class Chess_piece
     end
 
     #En passant
-    if !board[row][column + 1].nil? && board[row][column + 1].colour != self.colour && board[row][column + 1].en_passant == true
-      moves << [row + direction, column + direction] if board[row + direction][column + direction].nil?
+    # if !board[row][column + 1].nil? && board[row][column + 1].colour != self.colour && board[row][column + 1].en_passant == true
+    #   moves << [row + direction, column + direction] 
+    # end
+    # if !board[row][column - 1].nil? && board[row][column - 1].colour != self.colour && board[row][column - 1].en_passant == true
+    #   moves << [row + direction, column - direction] 
+    # end   
+    # moves
+
+    #En_passant2
+    [-1, 1].each do |side|
+      if !board[row][column + side].nil? && board[row][column + side].colour != self.colour && board[row][column + side].en_passant
+        moves << [row + direction, column + side]
+      end
     end
-    if !board[row][column - 1].nil? && board[row][column - 1].colour != self.colour && board[row][column - 1].en_passant == true
-      moves << [row + direction, column - direction] if board[row + direction][column - direction].nil?
-    end   
     moves
+
   end
 
   def get_king_moves(position, board, used_by_king = false)

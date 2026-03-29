@@ -177,12 +177,7 @@ class UI
   end
 
   def clear
-    system("clear")
+    # system("clear")
   end
 end
-
-# test = Board.new
-# test.prepare_for_new_game
-# ui = UI.new
-# ui.get_player_move("Billy", [[1, 0]], test.board)
 
