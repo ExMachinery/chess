@@ -93,7 +93,7 @@ class Game
   def solve_en_passant (board, square)
     square.colour == :white ? direction = 1 : direction = -1
     x, y = square.position[0], square.position[1]
-    if board[x + direction][y]
+    if board[x + direction][y] && board[x + direction][y].type == :pawn
       board[x][y] = nil
     else
       square.en_passant = false

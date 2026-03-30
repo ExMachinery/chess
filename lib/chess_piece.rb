@@ -2,7 +2,7 @@ require_relative 'board'
 require_relative 'game'
 
 class Chess_piece
-  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack
+  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack, :castling_coordinate
   def initialize(type, colour, position)
     @type = type
     @colour = colour
@@ -10,6 +10,7 @@ class Chess_piece
     @castling = true if type == :rook || type == :king
     @en_passant = nil
     @under_attack = false
+    @castling_coordinate = []
   end
 
   def get_moves(position, board)
@@ -136,13 +137,6 @@ class Chess_piece
     end
 
     #Standard diagonal attack
-    # if !board[row + direction][column + direction].nil? && board[row + direction][column + direction].colour != self.colour
-    #   moves << [row + direction, column + direction]
-    # elsif !board[row + direction][column - direction].nil? && board[row + direction][column - direction].colour != self.colour
-    #   moves << [row + direction, column - direction]
-    # end
-
-    #Standard diagonal attack
     [-1, 1].each do |side|
       if !board[row + direction][column + side].nil? && board[row + direction][column + side].colour != self.colour
         moves << [row + direction, column + side]
@@ -177,42 +171,94 @@ class Chess_piece
     return for_king if used_by_king
 
     if self.castling && !self.under_attack
-      castling_position = check_castling(position, board)
-      if castling_position
-        moves << castling_position
-        # Here castling position could be sent to Game for additional UI features
-      end
+      check_castling(position, board)
     end
 
     final_moves = exclude_dangerous_king_moves(moves, board)
+    final_moves += @castling_coordinate
     final_moves
   end
 
-  def check_castling(position, board)
-    castling_position = []
-    check_on_left, check_on_right = false, false
-    row, column = position[0], position[1]
-    i = 1
-    until check_on_left && check_on_right
-      left = column + i if !check_on_left
-      right = column - i if !check_on_right
+  def temp_check_castling(position, board)
+    # rook_right_aftercastling_position, rook_left_aftercastling_position = [], []
+    # king_right_aftercastling_position, king_left_aftercastling_position = [], []
+    # check_on_left, check_on_right = false, false
+    # row, column = position[0], position[1]
+    # i = 1
+    # until check_on_left && check_on_right
+    #   left = column + i if !check_on_left
+    #   right = column - i if !check_on_right
       
-      if left >= 0 && left <= 7 && !board[row][left].nil? && !board[row][left].castling
-        check_on_left = true
-      elsif !board[row][left].nil? && board[row][left].castling
-        castling_position = [row, column + 2] 
-        check_on_left = true
-      end
+    #   if left >= 0 && left <= 7 && !board[row][left].nil? && !board[row][left].castling
+    #     check_on_left = true
+    #   elsif !board[row][left].nil? && board[row][left].castling
+    #     king_right_aftercastling_position << [row, column + 2]
+    #     rook_right_aftercastling_position << [row, column + 1]
+    #     check_on_left = true
+    #   end
 
-      if right >= 0 && right <= 7 && !board[row][right].nil? && !board[row][right].castling
-        check_on_right = true
-      elsif !board[row][right].nil? && board[row][right].castling
-        castling_position = [row, column - 2] 
-        check_on_right = true
+    #   if right >= 0 && right <= 7 && !board[row][right].nil? && !board[row][right].castling
+    #     check_on_right = true
+    #   elsif !board[row][right].nil? && board[row][right].castling
+    #     king_left_aftercastling_position << [row, column - 2]
+    #     rook_left_aftercastling_position << [row, column - 1]
+    #     check_on_right = true
+    #   end
+    #   i += 1
+    # end
+
+    # # Final castling check: all final positions should not be under attack
+    # castling_positions = []
+    # if rook_left_aftercastling_position && !exclude_dangerous_king_moves(rook_left_aftercastling_position, board).empty?
+    #   puts "I'm left. Rook: #{rook_left_aftercastling_position} King: #{king_left_aftercastling_position}"
+    #   castling_positions << king_left_aftercastling_position
+    # end
+    # if rook_right_aftercastling_position && !exclude_dangerous_king_moves(rook_right_aftercastling_position, board).empty?
+    #   puts "I'm right. Rook: #{rook_right_aftercastling_position} King: #{king_right_aftercastling_position}"
+    #   castling_positions << king_right_aftercastling_position
+    # end
+
+    # castling_positions
+  end
+
+  def check_castling(positon, board)
+    @castling_coordinate = []
+    king_x, king_y = position[0], position[1]
+    left, right = true, true
+
+    if board[king_x][0] && board[king_x][0].castling
+      board[king_x][0].castling_coordinate = []
+      i = 1
+      until i == king_y || !left
+        left = false if board[king_x][i]
+        i += 1
       end
-      i += 1
     end
-    castling_position
+    if board[king_x][7] && board[king_x][7].castling
+      board[king_x][7].castling_coordinate = []
+      i = 6
+      until i == king_y || !right
+        right = false if board[king_x][i]
+        i -= 1
+      end
+    end
+
+    if left
+      rook_castling_position = [king_x, king_y - 1]
+      king_castling_position = [king_x, king_y - 2]
+      if exclude_dangerous_king_moves([rook_castling_position, king_castling_position], board).size == 2
+        @castling_coordinate << king_castling_position
+        board[king_x][0].castling_coordinate << rook_castling_position
+      end
+    end
+    if right
+      king_castling_position = [king_x, king_y + 2]
+      rook_castling_position = [king_x, king_y + 1]
+      if exclude_dangerous_king_moves([rook_castling_position, king_castling_position], board).size == 2
+        @castling_coordinate << king_castling_position
+        board[king_x][7].castling_coordinate << rook_castling_position
+      end
+    end
   end
 
   def exclude_dangerous_king_moves(moves, board)
