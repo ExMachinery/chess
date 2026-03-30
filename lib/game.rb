@@ -43,15 +43,31 @@ class Game
       end
 
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
-      @board.state[pick[0]][pick[1]] = nil
       if king_not_in_danger?(@board.turn)
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
         transited_piece = @board.state[destination[0]][destination[1]]
         transited_piece.position = [destination[0], destination[1]]
         transited_piece.castling = false if transited_piece.castling
+
         case transited_piece.type
         when :king 
-          transited_piece.colour == :white ? @white_king = [destination[0], destination[1]] : @black_king = [destination[0], destination[1]]
+          transited_piece.colour == :white ? @white_king = destination : @black_king = destination
+          if transited_piece.castling_coordinate.include?(destination)
+            castling_direction = pick[1] - destination[1] > 0 ? :left_castling : :right_castling
+            case castling_direction
+            when :left_castling
+              castling_rook = @board.state[destination[0]][0].dup
+              @board.state[destination[0]][0] = nil
+            when :right_castling
+              castling_rook = @board.state[destination[0]][7].dup
+              @board.state[destination[0]][7] = nil
+            end
+            @board.state[castling_rook.castling_coordinate[0]][castling_rook.castling_coordinate[1]] = castling_rook
+            castling_rook.position = castling_rook.castling_coordinate
+            castling_rook.castling = false
+            castling_rook.castling_coordinate = []
+          end
+          transited_piece.castling_coordinate = []
         when :pawn 
           transited_piece.en_passant = true if [-2, 2].include?(pick[0] - destination[0])
           if (transited_piece.colour == :white && transited_piece.position[0] == 0) 
@@ -59,6 +75,8 @@ class Game
             transform_pawn(transited_piece.position, @board.state)  
           end
         end
+        @board.state[pick[0]][pick[1]] = nil
+
         check_condition = transited_piece.get_moves(transited_piece.position, @board.state)
         if transited_piece.colour == :white
           @board.state[@black_king[0]][@black_king[1]].under_attack = true if check_condition.include?(@black_king)
@@ -124,9 +142,10 @@ class Game
   end
 
   def king_not_in_danger?(turn)
-    turn == :white ? check = @white_king : check = @black_king
-    result = @board.state[check[0]][check[1]].exclude_dangerous_king_moves([check], @board.state)
-    result ? true : false
+    check = turn == :white ? @white_king : @black_king
+    array = @board.state[check[0]][check[1]].exclude_dangerous_king_moves([check], @board.state)
+    result = !array.empty?
+    result
   end
 
   def transform_pawn(position, board)

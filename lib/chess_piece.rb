@@ -179,48 +179,6 @@ class Chess_piece
     final_moves
   end
 
-  def temp_check_castling(position, board)
-    # rook_right_aftercastling_position, rook_left_aftercastling_position = [], []
-    # king_right_aftercastling_position, king_left_aftercastling_position = [], []
-    # check_on_left, check_on_right = false, false
-    # row, column = position[0], position[1]
-    # i = 1
-    # until check_on_left && check_on_right
-    #   left = column + i if !check_on_left
-    #   right = column - i if !check_on_right
-      
-    #   if left >= 0 && left <= 7 && !board[row][left].nil? && !board[row][left].castling
-    #     check_on_left = true
-    #   elsif !board[row][left].nil? && board[row][left].castling
-    #     king_right_aftercastling_position << [row, column + 2]
-    #     rook_right_aftercastling_position << [row, column + 1]
-    #     check_on_left = true
-    #   end
-
-    #   if right >= 0 && right <= 7 && !board[row][right].nil? && !board[row][right].castling
-    #     check_on_right = true
-    #   elsif !board[row][right].nil? && board[row][right].castling
-    #     king_left_aftercastling_position << [row, column - 2]
-    #     rook_left_aftercastling_position << [row, column - 1]
-    #     check_on_right = true
-    #   end
-    #   i += 1
-    # end
-
-    # # Final castling check: all final positions should not be under attack
-    # castling_positions = []
-    # if rook_left_aftercastling_position && !exclude_dangerous_king_moves(rook_left_aftercastling_position, board).empty?
-    #   puts "I'm left. Rook: #{rook_left_aftercastling_position} King: #{king_left_aftercastling_position}"
-    #   castling_positions << king_left_aftercastling_position
-    # end
-    # if rook_right_aftercastling_position && !exclude_dangerous_king_moves(rook_right_aftercastling_position, board).empty?
-    #   puts "I'm right. Rook: #{rook_right_aftercastling_position} King: #{king_right_aftercastling_position}"
-    #   castling_positions << king_right_aftercastling_position
-    # end
-
-    # castling_positions
-  end
-
   def check_castling(positon, board)
     @castling_coordinate = []
     king_x, king_y = position[0], position[1]
@@ -248,7 +206,7 @@ class Chess_piece
       king_castling_position = [king_x, king_y - 2]
       if exclude_dangerous_king_moves([rook_castling_position, king_castling_position], board).size == 2
         @castling_coordinate << king_castling_position
-        board[king_x][0].castling_coordinate << rook_castling_position
+        board[king_x][0].castling_coordinate = rook_castling_position
       end
     end
     if right
@@ -256,7 +214,7 @@ class Chess_piece
       rook_castling_position = [king_x, king_y + 1]
       if exclude_dangerous_king_moves([rook_castling_position, king_castling_position], board).size == 2
         @castling_coordinate << king_castling_position
-        board[king_x][7].castling_coordinate << rook_castling_position
+        board[king_x][7].castling_coordinate = rook_castling_position
       end
     end
   end
