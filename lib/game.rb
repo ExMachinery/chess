@@ -4,17 +4,26 @@ require_relative 'ui'
 require_relative 'chess_piece'
 
 class Game
-  attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king
-  def initialize
-    @board = Board.new
-    # Load save game logic here
-    @board.prepare_for_new_game
-    @white_king = [7, 4]
-    @black_king = [0, 4]
-    @ui = UI.new
-    player_nicknames = @ui.get_new_players_name
-    @p1 = Player.new(player_nicknames[0], :white)
-    @p2 = Player.new(player_nicknames[1], :black)
+  attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by
+  def initialize(instruction = nil)
+    if instruction == :test
+      @board = Board.new
+      @ui = UI.new
+      @p1 = Player.new("Big Beaver", :white)
+      @p2 = Player.new("Small Beaver", :black)
+    else
+      @board = Board.new
+      # Load save game logic here
+      @board.prepare_for_new_game
+      @white_king = [7, 4]
+      @black_king = [0, 4]
+      @white_king_attacked_by = nil
+      @black_king_attacked_by = nil
+      @ui = UI.new
+      player_nicknames = @ui.get_new_players_name
+      @p1 = Player.new(player_nicknames[0], :white)
+      @p2 = Player.new(player_nicknames[1], :black)
+    end
   end
 
   def game_sequence_start
@@ -43,6 +52,10 @@ class Game
       end
 
       piece_in_transit = @board.state[pick[0]][pick[1]].dup
+      # @board.state[pick[0]][pick[1]] = nil
+      # This would not work, if piece still in place, because king check wont catch king openned to attack after move.
+      # You can "nil" any figure except king. Or make a different logic.
+      
       if king_not_in_danger?(@board.turn)
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
         transited_piece = @board.state[destination[0]][destination[1]]
@@ -78,10 +91,12 @@ class Game
         @board.state[pick[0]][pick[1]] = nil
 
         check_condition = transited_piece.get_moves(transited_piece.position, @board.state)
-        if transited_piece.colour == :white
-          @board.state[@black_king[0]][@black_king[1]].under_attack = true if check_condition.include?(@black_king)
-        elsif transited_piece.colour == :black
-          @board.state[@white_king[0]][@white_king[1]].under_attack = true if check_condition.include?(@white_king)
+        if transited_piece.colour == :white && check_condition.include?(@black_king)
+          @board.state[@black_king[0]][@black_king[1]].under_attack = true
+          @black_king_attacked_by = [transited_piece.position[0], transited_piece.position[1]] 
+        elsif transited_piece.colour == :black && check_condition.include?(@white_king)
+          @board.state[@white_king[0]][@white_king[1]].under_attack = true
+          @white_king_attacked_by = [transited_piece.position[0], transited_piece.position[1]] 
         end
         @board.turn == :white ? @board.turn = :black : @board.turn = :white
         # This is infinite cycle now. Exit condition needed (Check/Mate, Mate, Save)
@@ -91,7 +106,55 @@ class Game
         @ui.alert_king_is_vulnerable
       end
     end
+  end
 
+  def check_king_condition(king_position, board, pieces)
+    x, y = king_position[0], king_position[1]
+    condition = nil
+    king_moves = board[x][y].get_moves([x, y], board)
+    if board.state[x][y].under_attack
+      condition = :check if !king_moves.empty?
+    elsif king_moves.empty?
+      condition = :blocked
+    else 
+      condition = :free
+    end
+
+    if condition == :blocked && pieces.empty?
+      condition = :stalemate
+    elsif condition == :check && king_moves.empty?
+      if pieces.empty?
+        condition = :checkmate
+      else
+
+      end
+    end
+    condition
+  end
+
+  def checkmate?(king_position, board, pieces)
+    x, y = king_position[0], king_position[1]
+    attacker = board.state[x][y].colour == :white ? @white_king_attacked_by : @black_king_attacked_by
+    a, b = attacker[0], attacker[1]
+    i, j = x <=> a, y <=> b
+    trajectory = Array.new
+    until [a, b] == [x, y]
+      trajectory << [a, b]
+      a += i
+      b += j
+    end
+    result = true
+    trajectory.each do |fragment|
+      pieces.each do |piece|
+        moves = board.state[piece[0]][piece[1]].get_moves(piece, board.state)
+        if moves.include?(fragment)
+          result = false
+          break
+        end
+      end
+      break if !result
+    end
+    result
   end
 
   def get_remaining_pieces(board, turn)
