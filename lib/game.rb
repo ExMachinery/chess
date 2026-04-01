@@ -122,6 +122,7 @@ class Game
 
     if condition == :blocked && pieces.empty?
       condition = :stalemate
+      # No, insufficient criteria: there can be other pieces, but they should be also in block.
     elsif condition == :check && king_moves.empty?
       if pieces.empty?
         condition = :checkmate
@@ -133,16 +134,21 @@ class Game
   end
 
   def checkmate?(king_position, board, pieces)
+    trajectory = Array.new
     x, y = king_position[0], king_position[1]
     attacker = board.state[x][y].colour == :white ? @white_king_attacked_by : @black_king_attacked_by
     a, b = attacker[0], attacker[1]
-    i, j = x <=> a, y <=> b
-    trajectory = Array.new
-    until [a, b] == [x, y]
+    if board.state[a][b].type == :knight
       trajectory << [a, b]
-      a += i
-      b += j
+    else
+      i, j = x <=> a, y <=> b
+      until [a, b] == [x, y]
+        trajectory << [a, b]
+        a += i
+        b += j
+      end
     end
+
     result = true
     trajectory.each do |fragment|
       pieces.each do |piece|

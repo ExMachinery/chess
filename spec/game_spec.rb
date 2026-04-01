@@ -25,6 +25,34 @@ RSpec.describe Game do
       subject.board.state[0][1] = Chess_piece.new(:rook, :white, [0, 1])
       expect(subject.checkmate?([0, 0], subject.board, [[5, 3], [0, 1]])).to eql(false)      
     end
+
+    it "correctly identify check by knight with blocked deffandable king" do
+      subject.board = Board.new
+      subject.board.state[0][2] = Chess_piece.new(:king, :white, [0, 2])
+      subject.board.state[0][2].castling = false
+      subject.board.state[0][0] = Chess_piece.new(:king, :black, [0, 0])
+      subject.board.state[1][0] = Chess_piece.new(:rook, :black, [1, 0])
+      subject.board.state[2][3] = Chess_piece.new(:rook, :black, [2, 3])
+      subject.board.state[2][1] = Chess_piece.new(:knight, :black, [2, 1])
+      subject.white_king_attacked_by = [2, 1]
+      subject.board.state[0][2].under_attack = true
+      subject.board.state[7][1] = Chess_piece.new(:rook, :white, [7, 1])
+      expect(subject.checkmate?([0, 2], subject.board, [[7, 1]])).to eql(false)
+    end
+
+    it "correctly identify checkmate by knight" do
+      subject.board = Board.new
+      subject.board.state[0][2] = Chess_piece.new(:king, :white, [0, 2])
+      subject.board.state[0][2].castling = false
+      subject.board.state[0][0] = Chess_piece.new(:king, :black, [0, 0])
+      subject.board.state[1][0] = Chess_piece.new(:rook, :black, [1, 0])
+      subject.board.state[2][3] = Chess_piece.new(:rook, :black, [2, 3])
+      subject.board.state[2][1] = Chess_piece.new(:knight, :black, [2, 1])
+      subject.white_king_attacked_by = [2, 1]
+      subject.board.state[0][2].under_attack = true
+      subject.board.state[5][0] = Chess_piece.new(:pawn, :white, [5, 0])
+      expect(subject.checkmate?([0, 2], subject.board, [[5, 0]])).to eql(true)      
+    end
   end
 
   describe "#check_king_condition" do
