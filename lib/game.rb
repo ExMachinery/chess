@@ -111,9 +111,9 @@ class Game
   def check_king_condition(king_position, board, pieces)
     x, y = king_position[0], king_position[1]
     condition = nil
-    king_moves = board[x][y].get_moves([x, y], board)
+    king_moves = board.state[x][y].get_moves([x, y], board.state)
     if board.state[x][y].under_attack
-      condition = :check if !king_moves.empty?
+      condition = :check 
     elsif king_moves.empty?
       condition = :blocked
     else 
@@ -126,7 +126,7 @@ class Game
       if pieces.empty?
         condition = :checkmate
       else
-
+        condition = :checkmate if checkmate?(king_position, board, pieces)
       end
     end
     condition
