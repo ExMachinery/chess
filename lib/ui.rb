@@ -64,7 +64,7 @@ class UI
     leter_dictionary = ["a", "b", "c", "d", "e", "f", "g", "h"]
     result = nil
 
-    # From digial to human
+    # From digital to human
     if notation == :to_human
       x, y = coordinates[0], coordinates[1]
       result = "#{leter_dictionary[y]}#{digit_dictionary[x]}"

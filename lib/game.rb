@@ -35,30 +35,39 @@ class Game
       # Here should be CHECK! alert if king under attack after previous player turn.
 
       pieces = get_remaining_pieces(@board.state, @board.turn)
+
+      # Get king condition in this turn
+      king_position = @board.turn == :white ? @white_king : @black_king
+      king_condition = check_king_condition(king_position, @board, pieces)
+      # Condition should decide game scenario or win/draw condition. 
       
       # Get player valid pick and destination.
-      destination, pick, moves = nil, nil, nil
-      until destination
-        transition = ensure_transition(pieces)
-        pick, moves = transition[0], transition[1]
-        if pick == :exit
-          # Here check for "Exit & Save the game" needed
-          system("exit") # Temporary
+      case king_condition
+      when :free || :blocked
+        passed = false
+        until passed
+          decision = process_player_decision(@board.state, pieces)
+          pick, destination = decision[0], decision[1]
+          piece_in_transit = @board.state[pick[0]][pick[1]].dup
+          if !piece_in_transit.type = :king
+            @board.state[pick[0]][pick[1]] = nil
+            passed = king_not_in_danger?(@board.turn)
+            if !passed
+              @board.state[pick[0]][pick[1]] = piece_in_transit
+              @ui.clear
+              @ui.alert_king_is_vulnerable
+            end
+          end
         end
         
-        @ui.clear
-        @ui.render_board(@board.state, moves)
-        destination = @ui.get_player_move(moves, @board.state)
-      end
-
-      piece_in_transit = @board.state[pick[0]][pick[1]].dup
-      # @board.state[pick[0]][pick[1]] = nil
-      # This would not work, if piece still in place, because king check wont catch king openned to attack after move.
-      # You can "nil" any figure except king. Or make a different logic.
-      
-      if king_not_in_danger?(@board.turn)
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
         transited_piece = @board.state[destination[0]][destination[1]]
+        manage_transit(@board.state, pick, destination, transited_piece)
+
+        
+      end
+      
+      if king_not_in_danger?(@board.turn)
         transited_piece.position = [destination[0], destination[1]]
         transited_piece.castling = false if transited_piece.castling
 
@@ -106,6 +115,55 @@ class Game
         @ui.alert_king_is_vulnerable
       end
     end
+  end
+
+  def manage_transit(board, pick,  destination, transited_piece)
+    x, y = destination[0], destination[1]
+    transited_piece.position = [x, y]
+    transited_piece.castling = false if transited_piece.castling
+    case transited_piece.type
+    when :king 
+      transited_piece.colour == :white ? @white_king = destination : @black_king = destination
+      if transited_piece.castling_coordinate.include?(destination)
+        castling_direction = pick[1] - y > 0 ? :left_castling : :right_castling
+        case castling_direction
+        when :left_castling
+          castling_rook = board[x][0].dup
+          board[x][0] = nil
+        when :right_castling
+          castling_rook = board[x][7].dup
+          board[x][7] = nil
+        end
+        board[castling_rook.castling_coordinate[0]][castling_rook.castling_coordinate[1]] = castling_rook
+        castling_rook.position = castling_rook.castling_coordinate
+        castling_rook.castling = false
+        castling_rook.castling_coordinate = []
+      end
+      transited_piece.castling_coordinate = []
+      board[pick[0]][pick[1]] = nil
+    when :pawn 
+      transited_piece.en_passant = true if [-2, 2].include?(pick[0] - x)
+      if (transited_piece.colour == :white && transited_piece.position[0] == 0) 
+        || (transited_piece.colour == :black && transited_piece.position[0] == 7)
+        transform_pawn(transited_piece.position, board)  
+      end
+    end
+  end
+
+  # Get player valid pick and destination.
+  def process_player_decision(board, pieces)
+    destination, pick, moves = nil, nil, nil
+    transition = ensure_transition(pieces)
+    pick, moves = transition[0], transition[1]
+    if pick == :exit
+      # Here check for "Exit & Save the game" needed
+      system("exit") # Temporary
+    end
+    
+    @ui.clear
+    @ui.render_board(board, moves)
+    destination = @ui.get_player_move(moves, board)
+    return [pick, destination]
   end
 
   def check_king_condition(king_position, board, pieces)
