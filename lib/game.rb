@@ -30,16 +30,11 @@ class Game
     
     done = false
     until done
-      # Here should be check-mate and mate condition verification
-      
-      # Here should be CHECK! alert if king under attack after previous player turn.
-
       pieces = get_remaining_pieces(@board.state, @board.turn)
 
       # Get king condition in this turn
       king_position = @board.turn == :white ? @white_king : @black_king
       king_condition = check_king_condition(king_position, @board, pieces)
-      # Condition should decide game scenario or win/draw condition. 
       
       # Get player valid pick and destination.
       case king_condition
@@ -63,58 +58,26 @@ class Game
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
         transited_piece = @board.state[destination[0]][destination[1]]
         manage_transit(@board.state, pick, destination, transited_piece)
+        detect_check_condition(@board.state, transited_piece)
+      when :check
 
-        
-      end
-      
-      if king_not_in_danger?(@board.turn)
-        transited_piece.position = [destination[0], destination[1]]
-        transited_piece.castling = false if transited_piece.castling
-
-        case transited_piece.type
-        when :king 
-          transited_piece.colour == :white ? @white_king = destination : @black_king = destination
-          if transited_piece.castling_coordinate.include?(destination)
-            castling_direction = pick[1] - destination[1] > 0 ? :left_castling : :right_castling
-            case castling_direction
-            when :left_castling
-              castling_rook = @board.state[destination[0]][0].dup
-              @board.state[destination[0]][0] = nil
-            when :right_castling
-              castling_rook = @board.state[destination[0]][7].dup
-              @board.state[destination[0]][7] = nil
-            end
-            @board.state[castling_rook.castling_coordinate[0]][castling_rook.castling_coordinate[1]] = castling_rook
-            castling_rook.position = castling_rook.castling_coordinate
-            castling_rook.castling = false
-            castling_rook.castling_coordinate = []
-          end
-          transited_piece.castling_coordinate = []
-        when :pawn 
-          transited_piece.en_passant = true if [-2, 2].include?(pick[0] - destination[0])
-          if (transited_piece.colour == :white && transited_piece.position[0] == 0) 
-            || (transited_piece.colour == :black && transited_piece.position[0] == 7)
-            transform_pawn(transited_piece.position, @board.state)  
-          end
-        end
-        @board.state[pick[0]][pick[1]] = nil
-
-        check_condition = transited_piece.get_moves(transited_piece.position, @board.state)
-        if transited_piece.colour == :white && check_condition.include?(@black_king)
-          @board.state[@black_king[0]][@black_king[1]].under_attack = true
-          @black_king_attacked_by = [transited_piece.position[0], transited_piece.position[1]] 
-        elsif transited_piece.colour == :black && check_condition.include?(@white_king)
-          @board.state[@white_king[0]][@white_king[1]].under_attack = true
-          @white_king_attacked_by = [transited_piece.position[0], transited_piece.position[1]] 
-        end
-        @board.turn == :white ? @board.turn = :black : @board.turn = :white
-        # This is infinite cycle now. Exit condition needed (Check/Mate, Mate, Save)
-      else
-        @board.state[pick[0]][pick[1]] = piece_in_transit
-        @ui.clear
-        @ui.alert_king_is_vulnerable
+      when :stalemate
+        # Draw condition
+      when :checkmate
+        # Winning condition
       end
     end
+  end
+
+  def detect_check_condition(board, transited_piece)
+    check_condition = transited_piece.get_moves(transited_piece.position, board)
+    if transited_piece.colour == :white && check_condition.include?(@black_king)
+      board[@black_king[0]][@black_king[1]].under_attack = true
+      @black_king_attacked_by = transited_piece.position.dup
+    elsif transited_piece.colour == :black && check_condition.include?(@white_king)
+      board[@white_king[0]][@white_king[1]].under_attack = true
+      @white_king_attacked_by = transited_piece.position.dup
+    end    
   end
 
   def manage_transit(board, pick,  destination, transited_piece)
@@ -181,6 +144,7 @@ class Game
     if condition == :blocked && pieces.empty?
       condition = :stalemate
       # No, insufficient criteria: there can be other pieces, but they should be also in block.
+      # Also, here should be logic that detect Autodraw conditions.
     elsif condition == :check && king_moves.empty?
       if pieces.empty?
         condition = :checkmate
@@ -206,6 +170,12 @@ class Game
         b += j
       end
     end
+
+    # King is blocked?
+    # king_moves = board.state[x][y].get_moves([x, y], board.state)
+    # if king_moves.empty?
+      
+    # end
 
     result = true
     trajectory.each do |fragment|

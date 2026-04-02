@@ -93,7 +93,15 @@ RSpec.describe Chess_piece do
       expect(test.get_king_moves([7, 4], board)).to eql([[7, 5], [7, 6]])
     end
 
-
+  end
+  describe "#mark_bishop_defender" do
+    it "could properly mark chess piece as a king deffender against bishop" do
+      test = Chess_piece.new(:king, :white, [0, 0])
+      board[1][1] = Chess_piece.new(:pawn, :white, [1, 1])
+      board[3][3] = Chess_piece.new(:bishop, :black, [3, 3])
+      test.mark_bishop_deffender([0, 0], board)
+      expect(board[1][1].king_deffender).to eql(true)
+    end
   end
 
 end

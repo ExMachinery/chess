@@ -2,7 +2,7 @@ require_relative 'board'
 require_relative 'game'
 
 class Chess_piece
-  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack, :castling_coordinate
+  attr_accessor :type, :colour, :position, :en_passant, :castling, :under_attack, :castling_coordinate, :king_deffender
   def initialize(type, colour, position)
     @type = type
     @colour = colour
@@ -27,7 +27,7 @@ class Chess_piece
     moves
   end
   
-  def get_bishop_moves(position, board, used_by_king = false)
+  def get_bishop_moves(position, board, instruction = false)
     for_king = false
     moves = []
     [1, -1].each do |i|
@@ -51,11 +51,38 @@ class Chess_piece
         end
       end
     end
-    return for_king if used_by_king
+    return for_king if instruction == :for_king
     moves
   end
 
-  def get_rook_moves(position, board, used_by_king = false)
+  def mark_bishop_deffender(position, board)
+    [1, -1].each do |i|
+      [1, -1].each do |j|
+        row, column = position[0], position[1]
+        deffender = nil
+        done = false
+        until done
+          row, column = row + i, column + j
+          if row < 0 || row > 7 || column < 0 || column > 7
+            done = true
+            break
+          end
+          next if board[row][column] == nil
+          if !board[row][column].nil? && board[row][column].colour == self.colour
+            done = true if deffender
+            deffender = board[row][column]
+          elsif !board[row][column].nil? && board[row][column].colour != self.colour
+            if board[row][column].type == :bishop || board[row][column] == :queen
+              board[deffender.position[0]][deffender.position[1]].king_deffender = true if deffender
+            end
+            done = true
+          end
+        end
+      end
+    end
+  end
+
+  def get_rook_moves(position, board, instruction = false)
     for_king = false
     moves = []
     [1, -1].each do |i|
@@ -92,11 +119,11 @@ class Chess_piece
         end
       end
     end
-    return for_king if used_by_king
+    return for_king if instruction == :for_king
     moves
   end
 
-  def get_knight_moves(position, board, used_by_king = false)
+  def get_knight_moves(position, board, instruction = false)
     for_king = false
     row, column = position[0], position[1]
     moves = []
@@ -119,7 +146,7 @@ class Chess_piece
         end    
       end
     end
-    return for_king if used_by_king
+    return for_king if instruction == :for_king
     moves
   end
 
@@ -144,6 +171,7 @@ class Chess_piece
     end
 
     #En_passant
+    #Here should be logic, which check if en passant move will open this player king to attack
     [-1, 1].each do |side|
       if !board[row][column + side].nil? && board[row][column + side].colour != self.colour && board[row][column + side].en_passant
         moves << [row + direction, column + side]
@@ -153,7 +181,7 @@ class Chess_piece
 
   end
 
-  def get_king_moves(position, board, used_by_king = false)
+  def get_king_moves(position, board, instruction = false)
     for_king = false
     moves = []
     row, column = position[0], position[1]
@@ -168,7 +196,7 @@ class Chess_piece
         end
       end
     end
-    return for_king if used_by_king
+    return for_king if instruction == :for_king
 
     if self.castling && !self.under_attack
       check_castling(position, board)
@@ -222,8 +250,8 @@ class Chess_piece
   def exclude_dangerous_king_moves(moves, board)
     final_moves = moves.dup
     moves.each do |move|
-      if get_bishop_moves(move, board, true) || get_knight_moves(move, board, true) 
-        || get_rook_moves(move, board, true) || get_king_moves(move, board, true)
+      if get_bishop_moves(move, board, :for_king) || get_knight_moves(move, board, :for_king) 
+        || get_rook_moves(move, board, :for_king) || get_king_moves(move, board, :for_king)
         final_moves.delete(move)
       end
 
