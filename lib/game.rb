@@ -44,9 +44,17 @@ class Game
           decision = process_player_decision(@board.state, pieces)
           pick, destination = decision[0], decision[1]
           piece_in_transit = @board.state[pick[0]][pick[1]].dup
-          if !piece_in_transit.type = :king
+          if !piece_in_transit.type == :king
+            ### En passant rare case, where king where protected from check by enemy pawn solution
+            enemy_pawn = nil
+            if piece_in_transit.type == :pawn && pick[1] != destination[1]
+              enemy_pawn = @board.state[pick[0]][destination[1]].dup
+              @board.state[pick[0]][destination[1]] = nil
+            end
+            ###
             @board.state[pick[0]][pick[1]] = nil
             passed = king_not_in_danger?(@board.turn)
+            @board.state[pick[0]][destination[1]] = enemy_pawn if enemy_pawn # Return temporary deleted pawn to its place
             if !passed
               @board.state[pick[0]][pick[1]] = piece_in_transit
               @ui.clear
@@ -199,6 +207,7 @@ class Game
         next if !square
         if square.colour == turn
           solve_en_passant(board, square) if square.en_passant
+          square.king_deffender = nil if square.king_deffender
           pieces << square.position if board[square.position[0]][square.position[1]]
         end
       end
