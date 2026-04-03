@@ -94,13 +94,30 @@ RSpec.describe Chess_piece do
     end
 
   end
-  describe "#mark_bishop_defender" do
+  describe "Defender marker" do
     it "could properly mark chess piece as a king deffender against bishop" do
       test = Chess_piece.new(:king, :white, [0, 0])
       board[1][1] = Chess_piece.new(:pawn, :white, [1, 1])
       board[3][3] = Chess_piece.new(:bishop, :black, [3, 3])
       test.mark_bishop_deffender([0, 0], board)
       expect(board[1][1].king_deffender).to eql(true)
+    end
+
+    it "could properly mark chess piece as a king deffender against rook" do
+      test = Chess_piece.new(:king, :white, [0, 0])
+      board[0][1] = Chess_piece.new(:pawn, :white, [0, 1])
+      board[0][5] = Chess_piece.new(:rook, :black, [0, 5])
+      test.mark_rook_deffender([0, 0], board)
+      expect(board[0][1].king_deffender).to eql(true)      
+    end
+
+    it "wont mark piece if there is another ally piece behind" do
+      test = Chess_piece.new(:king, :white, [0, 0])
+      board[0][1] = Chess_piece.new(:pawn, :white, [0, 1])
+      board[0][2] = Chess_piece.new(:rook, :white, [0, 2])
+      board[0][5] = Chess_piece.new(:rook, :black, [0, 5])
+      test.mark_rook_deffender([0, 0], board)
+      expect(board[0][1].king_deffender).to eql(nil)
     end
   end
 

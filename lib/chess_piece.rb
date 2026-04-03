@@ -123,6 +123,46 @@ class Chess_piece
     moves
   end
 
+  def mark_rook_deffender(position, board)
+    [1, -1].each do |i|
+      deffender = nil
+      skip_row_direction, skip_column_direction = false, false
+      row, column = position[0], position[1]
+      until skip_column_direction && skip_row_direction
+        row = row + i if !skip_row_direction
+        column = column + i if !skip_column_direction
+        
+        if row < 0 || row > 7
+          skip_row_direction = true
+        elsif !skip_row_direction
+          if !board[row][position[1]].nil? && board[row][position[1]].colour == self.colour
+            skip_row_direction = true if deffender
+            deffender = board[row][position[1]]
+          elsif !board[row][position[1]].nil? && board[row][position[1]].colour != self.colour
+            if board[row][position[1]].type == :rook || board[row][position[1]].type == :queen
+              board[deffender.position[0]][deffender.position[1]].king_deffender = true if deffender
+            end
+            skip_row_direction = true
+          end
+        end
+        
+        if column < 0 || column > 7
+          skip_column_direction = true
+        elsif !skip_column_direction
+          if !board[position[0]][column].nil? && board[position[0]][column].colour == self.colour
+            skip_column_direction = true if deffender
+            deffender = board[position[0]][column]
+          elsif !board[position[0]][column].nil? && board[position[0]][column].colour != self.colour
+            if board[position[0]][column].type == :rook || board[position[0]][column].type == :queen
+              board[deffender.position[0]][deffender.position[1]].king_deffender = true if deffender
+            end
+            skip_column_direction = true
+          end
+        end
+      end
+    end
+  end
+
   def get_knight_moves(position, board, instruction = false)
     for_king = false
     row, column = position[0], position[1]
