@@ -46,7 +46,7 @@ class Chess_piece
           elsif !board[row][column].nil? && board[row][column].colour != self.colour
             done = true
             moves << [row, column]
-            for_king = true if board[row][column].type == :bishop || board[row][column] == :queen
+            for_king = true if board[row][column].type == :bishop || board[row][column].type == :queen
           end
         end
       end
@@ -72,7 +72,7 @@ class Chess_piece
             done = true if deffender
             deffender = board[row][column]
           elsif !board[row][column].nil? && board[row][column].colour != self.colour
-            if board[row][column].type == :bishop || board[row][column] == :queen
+            if board[row][column].type == :bishop || board[row][column].type == :queen
               board[deffender.position[0]][deffender.position[1]].king_deffender = true if deffender
             end
             done = true
