@@ -55,6 +55,11 @@ class Chess_piece
     moves
   end
 
+  def mark_deffenders(position, board)
+    mark_bishop_deffender(position, board)
+    mark_rook_deffender(position, board)
+  end
+
   def mark_bishop_deffender(position, board)
     [1, -1].each do |i|
       [1, -1].each do |j|

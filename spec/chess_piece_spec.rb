@@ -119,6 +119,15 @@ RSpec.describe Chess_piece do
       expect(board[0][1].king_deffender).to eql(true)      
     end
 
+    it "THIS ROOK" do
+      test = Chess_piece.new(:king, :white, [0, 0])
+      board[0][1] = Chess_piece.new(:rook, :white, [0, 1])
+      board[0][7] = Chess_piece.new(:rook, :black, [0, 7])
+      board[7][1] = Chess_piece.new(:rook, :black, [7, 1])
+      test.mark_rook_deffender([0, 0], board)
+      expect(board[0][1].king_deffender).to eql(true)      
+    end
+
     it "could properly mark chess piece as a king deffender against forward queen" do
       test = Chess_piece.new(:king, :white, [0, 0])
       board[0][1] = Chess_piece.new(:pawn, :white, [0, 1])

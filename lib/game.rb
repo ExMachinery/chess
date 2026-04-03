@@ -172,14 +172,15 @@ class Game
     end
 
     # King is blocked?
-    # king_moves = board.state[x][y].get_moves([x, y], board.state)
-    # if king_moves.empty?
-      
-    # end
+    king_moves = board.state[x][y].get_moves([x, y], board.state)
+    if king_moves.empty?
+      board.state[x][y].mark_deffenders(king_position, board.state)
+    end
 
     result = true
     trajectory.each do |fragment|
       pieces.each do |piece|
+        next if board.state[piece[0]][piece[1]].king_deffender
         moves = board.state[piece[0]][piece[1]].get_moves(piece, board.state)
         if moves.include?(fragment)
           result = false
