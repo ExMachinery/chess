@@ -55,7 +55,6 @@ class Board
       symbols.each do |symb|        
         if symb.to_i != 0
           symb.to_i.times {column += 1}
-          p column
         else
           properties = fel_notation(symb)
           type, colour = properties[0], properties[1]

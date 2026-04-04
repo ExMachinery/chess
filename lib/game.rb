@@ -35,9 +35,10 @@ class Game
       # Get king condition in this turn
       king_position = @board.turn == :white ? @white_king : @black_king
       king_condition = check_king_condition(king_position, @board, pieces)
+      p king_condition
       # Get player valid pick and destination.
       case king_condition
-      when :normal
+      when :free, :blocked, :check
         passed = false
         until passed
           decision = process_player_decision(@board.state, pieces)
@@ -143,6 +144,7 @@ class Game
       
       @ui.clear
       @ui.render_board(board, moves)
+
       destination = false
       destination = @ui.get_player_move(moves, board)
     end
@@ -172,7 +174,6 @@ class Game
         condition = :checkmate if checkmate?(king_position, board, pieces)
       end
     end
-    condition = :normal if condition == :blocked || condition == :free || condition == :check
     condition
   end
 
@@ -244,6 +245,7 @@ class Game
     checked = false
     until checked
       @ui.render_board(@board.state)
+      @ui.alert_check if @board.state[@white_king[0]][@white_king[1]].under_attack || @board.state[@black_king[0]][@black_king[1]].under_attack
       @ui.print_piecelist(pieces, @board.state)
       @board.turn == :white ? pick = @ui.get_pick(@p1, pieces, @board.state) : pick = @ui.get_pick(@p2, pieces, @board.state)
       if pick == :exit
@@ -263,7 +265,7 @@ class Game
 
   def king_not_in_danger?(turn, board, pieces)
     check = turn == :white ? @white_king : @black_king
-    return true if check_king_condition(check, board, pieces) == :normal
+    return true if [:free, :blocked].include?(check_king_condition(check, board, pieces))
     false
   end
 

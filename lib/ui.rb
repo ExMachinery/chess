@@ -173,7 +173,13 @@ class UI
 
   # This alert should triggers when player trying to move piece which protect king from attack (preventing instant loose)
   def alert_king_is_vulnerable
-    puts "Move cannot be done because king is protected from attack by this piece. Try another one."
+    puts "Invalid move. King is exposed to attack."
+  end
+
+  def alert_check
+    print "\e[48;2;255;127;0m  KING IS UNDER ATTACK!!!  "
+    print "\e[0m  "
+    print "\n\n"
   end
 
   def clear
