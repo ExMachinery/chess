@@ -7,11 +7,12 @@ class Game
   attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by
   def initialize(instruction = nil)
     if instruction == :test
-      @board = Board.new
       @ui = UI.new
+      @board = Board.new(@ui, self)
       @p1 = Player.new("Big Beaver", :white)
       @p2 = Player.new("Small Beaver", :black)
     else
+      @ui = UI.new
       @board = Board.new
       # Load save game logic here
       @board.prepare_for_new_game
@@ -19,7 +20,6 @@ class Game
       @black_king = [0, 4]
       @white_king_attacked_by = nil
       @black_king_attacked_by = nil
-      @ui = UI.new
       player_nicknames = @ui.get_new_players_name
       @p1 = Player.new(player_nicknames[0], :white)
       @p2 = Player.new(player_nicknames[1], :black)
@@ -27,34 +27,35 @@ class Game
   end
 
   def game_sequence_start
-    
     done = false
+    counter = 0 # testing
     until done
       pieces = get_remaining_pieces(@board.state, @board.turn)
 
       # Get king condition in this turn
       king_position = @board.turn == :white ? @white_king : @black_king
       king_condition = check_king_condition(king_position, @board, pieces)
-      
       # Get player valid pick and destination.
       case king_condition
-      when :free || :blocked
+      when :normal
         passed = false
         until passed
           decision = process_player_decision(@board.state, pieces)
           pick, destination = decision[0], decision[1]
           piece_in_transit = @board.state[pick[0]][pick[1]].dup
-          if !piece_in_transit.type == :king
-            ### En passant rare case, where king where protected from check by enemy pawn solution
+          if piece_in_transit.type != :king
+
+            ### En passant rare case, where king protected from check by enemy pawn solution
             enemy_pawn = nil
             if piece_in_transit.type == :pawn && pick[1] != destination[1]
               enemy_pawn = @board.state[pick[0]][destination[1]].dup
               @board.state[pick[0]][destination[1]] = nil
             end
             ###
-            @board.state[pick[0]][pick[1]] = nil
-            passed = king_not_in_danger?(@board.turn)
+            
+            passed = king_not_in_danger?(@board.turn, @board, pieces)
             @board.state[pick[0]][destination[1]] = enemy_pawn if enemy_pawn # Return temporary deleted pawn to its place
+            @board.state[pick[0]][pick[1]] = nil
             if !passed
               @board.state[pick[0]][pick[1]] = piece_in_transit
               @ui.clear
@@ -62,18 +63,26 @@ class Game
             end
           end
         end
-        
         @board.state[destination[0]][destination[1]] = piece_in_transit.dup
         transited_piece = @board.state[destination[0]][destination[1]]
         manage_transit(@board.state, pick, destination, transited_piece)
         detect_check_condition(@board.state, transited_piece)
-      when :check
-
+        @board.turn = @board.turn == :white ? :black : :white
       when :stalemate
         # Draw condition
+        system("exit")
       when :checkmate
         # Winning condition
+        system("exit")
       end
+      #testing block
+      counter += 1
+      if counter > 50
+        p "FATAL ERORR!!!"
+        system("exit")
+        break
+      end
+      ##############
     end
   end
 
@@ -124,16 +133,19 @@ class Game
   # Get player valid pick and destination.
   def process_player_decision(board, pieces)
     destination, pick, moves = nil, nil, nil
-    transition = ensure_transition(pieces)
-    pick, moves = transition[0], transition[1]
-    if pick == :exit
-      # Here check for "Exit & Save the game" needed
-      system("exit") # Temporary
+    until destination
+      transition = ensure_transition(pieces)
+      pick, moves = transition[0], transition[1]
+      if pick == :exit
+        # Here check for "Exit & Save the game" needed
+        system("exit") # Temporary
+      end
+      
+      @ui.clear
+      @ui.render_board(board, moves)
+      destination = false
+      destination = @ui.get_player_move(moves, board)
     end
-    
-    @ui.clear
-    @ui.render_board(board, moves)
-    destination = @ui.get_player_move(moves, board)
     return [pick, destination]
   end
 
@@ -142,7 +154,7 @@ class Game
     condition = nil
     king_moves = board.state[x][y].get_moves([x, y], board.state)
     if board.state[x][y].under_attack
-      condition = :check 
+      condition = :check
     elsif king_moves.empty?
       condition = :blocked
     else 
@@ -160,6 +172,7 @@ class Game
         condition = :checkmate if checkmate?(king_position, board, pieces)
       end
     end
+    condition = :normal if condition == :blocked || condition == :free || condition == :check
     condition
   end
 
@@ -248,11 +261,10 @@ class Game
     return [pick, moves]
   end
 
-  def king_not_in_danger?(turn)
+  def king_not_in_danger?(turn, board, pieces)
     check = turn == :white ? @white_king : @black_king
-    array = @board.state[check[0]][check[1]].exclude_dangerous_king_moves([check], @board.state)
-    result = !array.empty?
-    result
+    return true if check_king_condition(check, board, pieces) == :normal
+    false
   end
 
   def transform_pawn(position, board)
