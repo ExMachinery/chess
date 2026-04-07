@@ -6,7 +6,7 @@ require_relative 'chess_piece'
 class Game
   attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by
   def initialize(instruction = nil)
-    if instruction == :test
+    if instruction == :test # Delete this when done
       @ui = UI.new
       @board = Board.new(@ui, self)
       @p1 = Player.new("Big Beaver", :white)
@@ -35,7 +35,7 @@ class Game
       # Get king condition in this turn
       king_position = @board.turn == :white ? @white_king : @black_king
       king_condition = check_king_condition(king_position, @board, pieces)
-      p king_condition
+
       # Get player valid pick and destination.
       case king_condition
       when :free, :blocked, :check
@@ -43,28 +43,9 @@ class Game
         until passed
           decision = process_player_decision(@board.state, pieces)
           pick, destination = decision[0], decision[1]
-          piece_in_transit = @board.state[pick[0]][pick[1]].dup
-          if piece_in_transit.type != :king
-
-            ### En passant rare case, where king protected from check by enemy pawn solution
-            enemy_pawn = nil
-            if piece_in_transit.type == :pawn && pick[1] != destination[1]
-              enemy_pawn = @board.state[pick[0]][destination[1]].dup
-              @board.state[pick[0]][destination[1]] = nil
-            end
-            ###
-            
-            passed = king_not_in_danger?(@board.turn, @board, pieces)
-            @board.state[pick[0]][destination[1]] = enemy_pawn if enemy_pawn # Return temporary deleted pawn to its place
-            @board.state[pick[0]][pick[1]] = nil
-            if !passed
-              @board.state[pick[0]][pick[1]] = piece_in_transit
-              @ui.clear
-              @ui.alert_king_is_vulnerable
-            end
-          end
+          passed = process_temporary_state(pick, destination, pieces, @board.state)
         end
-        @board.state[destination[0]][destination[1]] = piece_in_transit.dup
+
         transited_piece = @board.state[destination[0]][destination[1]]
         manage_transit(@board.state, pick, destination, transited_piece)
         detect_check_condition(@board.state, transited_piece)
@@ -87,6 +68,40 @@ class Game
     end
   end
 
+  def process_temporary_state(pick, destination, pieces, board)
+    p_x, p_y = pick[0], pick[1]
+    d_x, d_y = destination[0], destination[1]
+    # temp_pieces = pieces.dup
+    piece_in_transit = board[p_x][p_y].dup
+    square_condition = board[d_x][d_y].dup
+
+    board[d_x][d_y] = piece_in_transit.dup # Reverse needed: A
+    board[p_x][p_y] = nil # Reverse needed: B
+    # temp_pieces << [d_x, d_y] 
+    # temp_pieces.delete([p_x, p_y]) 
+
+    if piece_in_transit.type != :king
+      ### En passant rare case, where king protected from check by enemy pawn solution
+      enemy_pawn = nil
+      if piece_in_transit.type == :pawn && p_y != d_y
+        enemy_pawn = board[p_x][d_y].dup
+        board[p_x][d_y] = nil # Reverse needed: E
+      end
+      ###
+
+      passed = inspect_check_condition(@board)
+      board[p_x][d_y] = enemy_pawn if enemy_pawn # Reversed: E
+      if !passed
+        board[p_x][p_y] = piece_in_transit # Reversed: B
+        board[d_x][d_y] = square_condition # Reversed: A
+        @ui.clear
+        @ui.alert_king_is_vulnerable
+      end
+    end
+    passed
+  end
+
+
   def detect_check_condition(board, transited_piece)
     check_condition = transited_piece.get_moves(transited_piece.position, board)
     if transited_piece.colour == :white && check_condition.include?(@black_king)
@@ -97,6 +112,20 @@ class Game
       @white_king_attacked_by = transited_piece.position.dup
     end    
   end
+
+  def inspect_check_condition(board)
+    inspection_result = false
+    king = board.turn == :white ? @white_king : @black_king
+    x, y = king[0], king[1]
+    king_check = board.state[x][y].exclude_dangerous_king_moves([[x, y]], board.state)
+    if !king_check.empty?
+      board.state[x][y].under_attack = false
+      board.state[x][y].colour == :white ? @white_king_attacked_by = nil : @black_king_attacked_by = nil
+      inspection_result = true
+    end
+    inspection_result
+  end
+
 
   def manage_transit(board, pick,  destination, transited_piece)
     x, y = destination[0], destination[1]
@@ -151,11 +180,19 @@ class Game
     return [pick, destination]
   end
 
+  # def king_not_in_danger?(turn, board, pieces)
+  #   check = turn == :white ? @white_king : @black_king
+  #   return true if [:free, :blocked].include?(check_king_condition(check, board, pieces))
+  #   false
+  # end
+
+
   def check_king_condition(king_position, board, pieces)
     x, y = king_position[0], king_position[1]
     condition = nil
     king_moves = board.state[x][y].get_moves([x, y], board.state)
-    if board.state[x][y].under_attack
+    king_in_danger = board.state[x][y].exclude_dangerous_king_moves([x, y], board.state)
+    if king_in_danger.empty?
       condition = :check
     elsif king_moves.empty?
       condition = :blocked
@@ -220,7 +257,10 @@ class Game
       row.each do |square|
         next if !square
         if square.colour == turn
-          solve_en_passant(board, square) if square.en_passant
+          if square.en_passant
+            solve_en_passant(board, square)
+            next
+          end
           square.king_deffender = nil if square.king_deffender
           pieces << square.position if board[square.position[0]][square.position[1]]
         end
@@ -261,12 +301,6 @@ class Game
       end
     end
     return [pick, moves]
-  end
-
-  def king_not_in_danger?(turn, board, pieces)
-    check = turn == :white ? @white_king : @black_king
-    return true if [:free, :blocked].include?(check_king_condition(check, board, pieces))
-    false
   end
 
   def transform_pawn(position, board)

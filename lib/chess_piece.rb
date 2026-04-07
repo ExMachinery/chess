@@ -299,7 +299,6 @@ class Chess_piece
         || get_rook_moves(move, board, :for_king) || get_king_moves(move, board, :for_king)
         final_moves.delete(move)
       end
-
       # Excluding squares under attack by enemy pawns
       row, column = move[0], move[1]
       self.colour == :white ? direction = -1 : direction = 1

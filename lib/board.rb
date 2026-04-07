@@ -64,7 +64,7 @@ class Board
           piece.castling = false if piece.type == :rook || piece.type == :king
           @game.white_king = [row, column] if piece.type == :king && piece.colour == :white
           @game.black_king = [row, column] if piece.type == :king && piece.colour == :black
-          column +=1
+          column += 1
         end
       end
       row += 1
