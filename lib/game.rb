@@ -52,15 +52,21 @@ class Game
         @board.turn = @board.turn == :white ? :black : :white
       when :stalemate
         # Draw condition
+        @ui.render_board(@board.state)
+        puts "It's Stalemate"
         system("exit")
+        break
       when :checkmate
         # Winning condition
+        @ui.render_board(@board.state)
+        puts "It's Checkmate"
         system("exit")
+        break
       end
       #testing block
       counter += 1
       if counter > 50
-        p "FATAL ERORR!!!"
+        p "FATAL ERROR!!!"
         system("exit")
         break
       end
@@ -71,14 +77,11 @@ class Game
   def process_temporary_state(pick, destination, pieces, board)
     p_x, p_y = pick[0], pick[1]
     d_x, d_y = destination[0], destination[1]
-    # temp_pieces = pieces.dup
+
     piece_in_transit = board[p_x][p_y].dup
     square_condition = board[d_x][d_y].dup
-
     board[d_x][d_y] = piece_in_transit.dup # Reverse needed: A
     board[p_x][p_y] = nil # Reverse needed: B
-    # temp_pieces << [d_x, d_y] 
-    # temp_pieces.delete([p_x, p_y]) 
 
     if piece_in_transit.type != :king
       ### En passant rare case, where king protected from check by enemy pawn solution
@@ -100,7 +103,6 @@ class Game
     end
     passed
   end
-
 
   def detect_check_condition(board, transited_piece)
     check_condition = transited_piece.get_moves(transited_piece.position, board)
@@ -125,7 +127,6 @@ class Game
     end
     inspection_result
   end
-
 
   def manage_transit(board, pick,  destination, transited_piece)
     x, y = destination[0], destination[1]
@@ -180,13 +181,6 @@ class Game
     return [pick, destination]
   end
 
-  # def king_not_in_danger?(turn, board, pieces)
-  #   check = turn == :white ? @white_king : @black_king
-  #   return true if [:free, :blocked].include?(check_king_condition(check, board, pieces))
-  #   false
-  # end
-
-
   def check_king_condition(king_position, board, pieces)
     x, y = king_position[0], king_position[1]
     condition = nil
@@ -239,6 +233,7 @@ class Game
     result = true
     trajectory.each do |fragment|
       pieces.each do |piece|
+        next if board.state[piece[0]][piece[1]].type == :king
         next if board.state[piece[0]][piece[1]].king_deffender
         moves = board.state[piece[0]][piece[1]].get_moves(piece, board.state)
         if moves.include?(fragment)
