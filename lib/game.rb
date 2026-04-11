@@ -13,16 +13,21 @@ class Game
       @p2 = Player.new("Small Beaver", :black)
     else
       @ui = UI.new
-      @board = Board.new
-      # Load save game logic here
-      @board.prepare_for_new_game
-      @white_king = [7, 4]
-      @black_king = [0, 4]
-      @white_king_attacked_by = nil
-      @black_king_attacked_by = nil
+      @board = Board.new(@ui, self)
       player_nicknames = @ui.get_new_players_name
       @p1 = Player.new(player_nicknames[0], :white)
       @p2 = Player.new(player_nicknames[1], :black)
+      if File.exist?("./save/save.yml")
+        if @ui.player_game_load?
+          @board.load_board
+        else
+          @board.prepare_for_new_game
+          @white_king = [7, 4]
+          @black_king = [0, 4]
+          @white_king_attacked_by = nil
+          @black_king_attacked_by = nil
+        end
+      end
     end
   end
 
@@ -51,11 +56,13 @@ class Game
         @board.turn = @board.turn == :white ? :black : :white
         @board.fullmove += 1 if @board.turn == :white && @board.fullmove != 1
         @board.process_draw_condition
+        @board.save_board
       when :stalemate, :draw_by_halfmove_rule
         # Draw condition
         @ui.render_board(@board.state)
         result = king_condition == :stalemate ? "Stalemate. Draw!" : "Draw by halfmove rule!"
         puts "#{result}"
+        File.delete("./save/save.yml") if File.exitst?("./save/save.yml")
         system("exit")
         break
       when :checkmate
@@ -63,6 +70,7 @@ class Game
         @ui.render_board(@board.state)
         winner = @white_king_attacked_by ? "White" : "Black"
         puts "Checkmate. #{winner} is won!"
+        File.delete("./save/save.yml") if File.exitst?("./save/save.yml")
         system("exit")
         break
       end
@@ -115,7 +123,8 @@ class Game
     end    
   end
 
-  def inspect_check_condition(board)
+  def inspect_check_condition(board) # ЭТА ЕБАНИНА ОПЯТЬ ГОВОРИТ ЧТО КОРОЛЬ ПОД ШАХОМ БЛЯТЬ!!!!!!!!
+    puts "its me?"
     inspection_result = false
     king = board.turn == :white ? @white_king : @black_king
     x, y = king[0], king[1]
@@ -187,7 +196,7 @@ class Game
     condition = nil
     king_moves = board.state[x][y].get_moves([x, y], board.state)
     king_in_danger = board.state[x][y].exclude_dangerous_king_moves([x, y], board.state)
-    if king_in_danger.empty?
+    if king_in_danger.empty? && board.state[x][y].under_attack
       condition = :check
     elsif king_moves.empty?
       condition = :blocked

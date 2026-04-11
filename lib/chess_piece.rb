@@ -298,6 +298,7 @@ class Chess_piece
   def exclude_dangerous_king_moves(moves, board)
     final_moves = moves.dup
     moves.each do |move|
+      puts "bishop: #{get_bishop_moves(move, board, :for_king)}, knight: #{get_knight_moves(move, board, :for_king)}, rook: #{get_rook_moves(move, board, :for_king)}, king: #{get_king_moves(move, board, :for_king)}"
       if get_bishop_moves(move, board, :for_king) || get_knight_moves(move, board, :for_king) 
         || get_rook_moves(move, board, :for_king) || get_king_moves(move, board, :for_king)
         final_moves.delete(move)
@@ -305,11 +306,12 @@ class Chess_piece
       # Excluding squares under attack by enemy pawns
       row, column = move[0], move[1]
       self.colour == :white ? direction = -1 : direction = 1
+      enemy_colour = self.colour == :white ? :black : :white
       if !board[row + direction][column + 1].nil? && board[row + direction][column + 1].type == :pawn
-        final_moves.delete(move) if board[row + direction][column + 1].colour == :black 
+        final_moves.delete(move) if board[row + direction][column + 1].colour == enemy_colour
       end
       if !board[row + direction][column - 1].nil? && board[row + direction][column - 1].type == :pawn && column - 1 > 0
-        final_moves.delete(move) if board[row + direction][column - 1].colour == :black 
+        final_moves.delete(move) if board[row + direction][column - 1].colour == enemy_colour
       end
     end
     final_moves

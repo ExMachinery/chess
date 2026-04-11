@@ -182,6 +182,21 @@ class UI
     print "\n\n"
   end
 
+  def player_game_load?
+    puts "There is an unfinished game. Do you like to continue (1) or start a new game (2)?"
+    valid = false
+    until valid
+      input = gets.chomp
+      case input.to_i
+      when 1 then valid = 1
+      when 2 then valid = 2
+      else
+        puts "Invalid input. 1 - for load saved game, 2 - for new game."
+      end
+    end
+    valid == 1 ? true : false
+  end
+
   def clear
     # system("clear")
   end

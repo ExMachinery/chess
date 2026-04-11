@@ -66,7 +66,7 @@ class Board
             castling_is_possible = true if piece.type == :king && piece.castling
             symbol = "k" if ([[0, 7], [7, 7]]).include?(piece.position)
             symbol = "q" if ([[0, 0], [7, 0]]).include?(piece.position)
-            symbol = symbol.upcase if piece.colour == :white
+            symbol = symbol.upcase if piece.colour == :white && symbol
             castling_str << symbol
           end
           en_passant_str << @ui.convert_notation(piece.position, :to_human) if piece.en_passant
@@ -80,6 +80,7 @@ class Board
     state_str.pop
     state_str = [state_str.join("")]
     turn_str = @turn == :white ? ["w"] : ["b"]
+    castling_str = [castling_str.join("")]
     castling_str = ["-"] if !castling_is_possible
     en_passant_str = ["-"] if en_passant_str.empty?
     halfmove_str = [@halfmove.to_s] 
@@ -165,14 +166,25 @@ class Board
   def add_castling(castling)
     castling.split("").each do |castling_status|
       case castling_status
-      when "k" then @board[0][7]&.castling = true
-      when "q" then @board[0][0]&.castling = true
-      when "K" then @board[7][7]&.castling = true
-      when "Q" then @board[7][0]&.castling = true
+      when "k" then @state[0][7]&.castling = true
+      when "q" then @state[0][0]&.castling = true
+      when "K" then @state[7][7]&.castling = true
+      when "Q" then @state[7][0]&.castling = true
       end      
     end
-    @board[0][4]&.castling = true if castling.include?("k") || castling.include?("q")
-    @board[7][4]&.castling = true if castling.include?("K") || castling.include?("Q")
+    @state[0][4]&.castling = true if castling.include?("k") || castling.include?("q")
+    @state[7][4]&.castling = true if castling.include?("K") || castling.include?("Q")
+  end
+
+  def save_board
+    board = convert_board_to_fen
+    File.write("./save/save.yml", board)
+  end
+
+  def load_board
+    return nil unless File.exist?("./save/save.yml")
+    board_str = File.read("./save/save.yml")
+    convert_fen_to_board(board_str)
   end
 end
 
