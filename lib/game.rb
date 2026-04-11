@@ -80,26 +80,31 @@ class Game
 
     piece_in_transit = board[p_x][p_y].dup
     square_condition = board[d_x][d_y].dup
+    colour = piece_in_transit.colour
+    if piece_in_transit.type == :king
+      colour == :white ? @white_king = [d_x, d_y] : @black_king = [d_x, d_y] # Reverse needed: C
+    end
     board[d_x][d_y] = piece_in_transit.dup # Reverse needed: A
     board[p_x][p_y] = nil # Reverse needed: B
+    
+    ### En passant rare case, where king protected from check by enemy pawn solution
+    enemy_pawn = nil
+    if piece_in_transit.type == :pawn && p_y != d_y
+      enemy_pawn = board[p_x][d_y].dup
+      board[p_x][d_y] = nil # Reverse needed: E
+    end
+    ###
 
-    if piece_in_transit.type != :king
-      ### En passant rare case, where king protected from check by enemy pawn solution
-      enemy_pawn = nil
-      if piece_in_transit.type == :pawn && p_y != d_y
-        enemy_pawn = board[p_x][d_y].dup
-        board[p_x][d_y] = nil # Reverse needed: E
+    passed = inspect_check_condition(@board)
+    board[p_x][d_y] = enemy_pawn if enemy_pawn # Reversed: E
+    if !passed
+      board[p_x][p_y] = piece_in_transit # Reversed: B
+      board[d_x][d_y] = square_condition # Reversed: A
+      if piece_in_transit.type == :king
+        colour == :white ? @white_king = [p_x, p_y] : @black_king = [p_x, p_y] # Reversed: C
       end
-      ###
-
-      passed = inspect_check_condition(@board)
-      board[p_x][d_y] = enemy_pawn if enemy_pawn # Reversed: E
-      if !passed
-        board[p_x][p_y] = piece_in_transit # Reversed: B
-        board[d_x][d_y] = square_condition # Reversed: A
-        @ui.clear
-        @ui.alert_king_is_vulnerable
-      end
+      @ui.clear
+      @ui.alert_king_is_vulnerable
     end
     passed
   end
@@ -301,7 +306,7 @@ class Game
   def transform_pawn(position, board)
     x, y = position[0], position[1]
     player_choice = @ui.choose_piece
-    @board[x][y] = Chess_piece.new(player_choice, board.turn, [x, y])
+    board[x][y] = Chess_piece.new(player_choice, @board.turn, [x, y])
   end
 
 end
