@@ -1,11 +1,14 @@
 require_relative 'chess_piece'
 class Board
-  attr_accessor :state, :turn, :ui, :game
+  attr_accessor :state, :turn, :ui, :game, :halfmove, :fullmove, :number_of_pieces
   def initialize(ui, game)
     @ui = ui
     @game = game
     @state = Array.new(8) { Array.new(8, nil) }
     @turn = :white
+    @halfmove = 0 # 100 means draw
+    @fullmove = 1
+    @number_of_pieces = 0
   end
 
   def prepare_for_new_game
@@ -25,6 +28,22 @@ class Board
       @state[side][5] = Chess_piece.new(:bishop, colour, [side, 5])
       @state[side][3] = Chess_piece.new(:queen, colour, [side, 3])
       @state[side][4] = Chess_piece.new(:king, colour, [side, 4])
+    end
+    @number_of_pieces = 32
+  end
+
+  def process_draw_condition
+    counter = 0
+    @state.each do |row|
+      row.each do |piece|
+        counter += 1 if piece
+      end
+    end
+    if counter == @number_of_pieces
+      @halfmove += 1
+    else
+      @number_of_pieces = counter
+      @halfmove = 0
     end
   end
 
@@ -63,8 +82,8 @@ class Board
     turn_str = @turn == :white ? ["w"] : ["b"]
     castling_str = ["-"] if !castling_is_possible
     en_passant_str = ["-"] if en_passant_str.empty?
-    halfmove_str = ["0"] # placeholder
-    fullmove_str = ["1"] # placeholder
+    halfmove_str = [@halfmove.to_s] 
+    fullmove_str = [@fullmove.to_s] 
 
     final = state_str + turn_str + castling_str + en_passant_str + halfmove_str + fullmove_str
     final = final.join(" ")
@@ -77,8 +96,8 @@ class Board
     turn = fen_sections[1]
     castling = fen_sections[2]
     en_passant = fen_sections[3]
-    halfmove = fen_sections[4] # Unused
-    fullmove = fen_sections[5] # Unused
+    @halfmove = fen_sections[4].to_i 
+    @fullmove = fen_sections[5].to_i 
 
     convert_state_and_fill(state)
     @turn = :black if turn == "b"
@@ -88,6 +107,7 @@ class Board
       en_passant = @ui.convert_notation(en_passant, :to_machine)
       @state[en_passant[0]][en_passant[1]]&.en_passant = true
     end
+
   end
 
   def convert_state_and_fill(state) 
@@ -99,6 +119,7 @@ class Board
         if symb.to_i != 0
           symb.to_i.times {column += 1}
         else
+          @number_of_pieces += 1
           properties = fen_notation(symb)
           type, colour = properties[0], properties[1]
           @state[row][column] = Chess_piece.new(type, colour, [row, column])

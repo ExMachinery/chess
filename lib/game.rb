@@ -49,10 +49,13 @@ class Game
         manage_transit(@board.state, pick, destination, transited_piece)
         detect_check_condition(@board.state, transited_piece)
         @board.turn = @board.turn == :white ? :black : :white
-      when :stalemate
+        @board.fullmove += 1 if @board.turn == :white && @board.fullmove != 1
+        @board.process_draw_condition
+      when :stalemate, :draw_by_halfmove_rule
         # Draw condition
         @ui.render_board(@board.state)
-        puts "Stalemate. Draw!"
+        result = king_condition == :stalemate ? "Stalemate. Draw!" : "Draw by halfmove rule!"
+        puts "#{result}"
         system("exit")
         break
       when :checkmate
@@ -149,7 +152,8 @@ class Game
       end
       transited_piece.castling_coordinate = []
       board[pick[0]][pick[1]] = nil
-    when :pawn 
+    when :pawn
+      @board.halfmove = 0
       transited_piece.en_passant = true if [-2, 2].include?(pick[0] - x)
       if (transited_piece.colour == :white && transited_piece.position[0] == 0) 
         || (transited_piece.colour == :black && transited_piece.position[0] == 7)
@@ -210,6 +214,7 @@ class Game
         condition = :checkmate if checkmate?(king_position, board, pieces)
       end
     end
+    condition = :draw_by_halfmove_rule if board.halfmove > 100
     condition
   end
 
