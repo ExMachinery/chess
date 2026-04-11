@@ -28,7 +28,6 @@ class Game
 
   def game_sequence_start
     done = false
-    counter = 0 # testing
     until done
       pieces = get_remaining_pieces(@board.state, @board.turn)
 
@@ -53,24 +52,17 @@ class Game
       when :stalemate
         # Draw condition
         @ui.render_board(@board.state)
-        puts "It's Stalemate"
+        puts "Stalemate. Draw!"
         system("exit")
         break
       when :checkmate
         # Winning condition
         @ui.render_board(@board.state)
-        puts "It's Checkmate"
+        winner = @white_king_attacked_by ? "White" : "Black"
+        puts "Checkmate. #{winner} is won!"
         system("exit")
         break
       end
-      #testing block
-      counter += 1
-      if counter > 50
-        p "FATAL ERROR!!!"
-        system("exit")
-        break
-      end
-      ##############
     end
   end
 
@@ -316,5 +308,4 @@ class Game
     player_choice = @ui.choose_piece
     board[x][y] = Chess_piece.new(player_choice, @board.turn, [x, y])
   end
-
 end

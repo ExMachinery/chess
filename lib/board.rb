@@ -28,6 +28,49 @@ class Board
     end
   end
 
+  def convert_board_to_fen
+    state_str = []
+    castling_is_possible = false
+    castling_str = []
+    en_passant_str = []
+    @state.each do |row|
+      counter = 0
+      column = 0
+      row.each do |piece|
+        column += 1
+        if piece
+          state_str << counter.to_s if counter > 0
+          counter = 0
+          state_str << piece_to_fen(piece.type, piece.colour)
+          
+          if piece.castling
+            castling_is_possible = true if piece.type == :king && piece.castling
+            symbol = "k" if ([[0, 7], [7, 7]]).include?(piece.position)
+            symbol = "q" if ([[0, 0], [7, 0]]).include?(piece.position)
+            symbol = symbol.upcase if piece.colour == :white
+            castling_str << symbol
+          end
+          en_passant_str << @ui.convert_notation(piece.position, :to_human) if piece.en_passant
+        else
+          counter += 1
+          state_str << counter.to_s if column == 8
+        end
+      end
+      state_str << "/"
+    end
+    state_str.pop
+    state_str = [state_str.join("")]
+    turn_str = @turn == :white ? ["w"] : ["b"]
+    castling_str = ["-"] if !castling_is_possible
+    en_passant_str = ["-"] if en_passant_str.empty?
+    halfmove_str = ["0"] # placeholder
+    fullmove_str = ["1"] # placeholder
+
+    final = state_str + turn_str + castling_str + en_passant_str + halfmove_str + fullmove_str
+    final = final.join(" ")
+    final
+  end
+
   def convert_fen_to_board(instruction)
     fen_sections = instruction.split(" ")
     state = fen_sections[0].split("/")
@@ -56,7 +99,7 @@ class Board
         if symb.to_i != 0
           symb.to_i.times {column += 1}
         else
-          properties = fel_notation(symb)
+          properties = fen_notation(symb)
           type, colour = properties[0], properties[1]
           @state[row][column] = Chess_piece.new(type, colour, [row, column])
           
@@ -72,7 +115,7 @@ class Board
   end
 
 
-  def fel_notation(symbol)
+  def fen_notation(symbol)
     colour = symbol.downcase == symbol ? :black : :white
     type = case symbol.downcase
     when "p" then :pawn
@@ -83,6 +126,19 @@ class Board
     when "k" then :king
     end
     return [type, colour]
+  end
+
+  def piece_to_fen(type, colour)
+    symbol = case type
+    when :pawn then "p"
+    when :rook then "r"
+    when :knight then "n"
+    when :bishop then "b"
+    when :queen then "q"
+    when :king then "k"
+    end
+    symbol = symbol.upcase if colour == :white
+    symbol
   end
 
   def add_castling(castling)
