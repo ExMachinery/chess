@@ -199,10 +199,18 @@ class Game
       condition = :free
     end
 
-    if condition == :blocked && pieces.empty?
-      condition = :stalemate
-      # No, insufficient criteria: there can be other pieces, but they should be also in block.
-      # Also, here should be logic that detect Autodraw conditions.
+    pieces_minus_king = pieces.reject {|piece| piece == [x, y]}
+    if condition == :blocked
+      if pieces_minus_king.empty?
+        condition = :stalemate 
+      else
+        moves = nil
+        pieces_minus_king.each do |piece|
+          moves = board.state[piece[0]][piece[1]].get_moves([piece[0], piece[1]], board.state)
+          break if !moves.empty?
+        end
+        condition = :stalemate if moves.empty?
+      end
     elsif condition == :check && king_moves.empty?
       if pieces.empty?
         condition = :checkmate

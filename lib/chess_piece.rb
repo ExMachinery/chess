@@ -308,7 +308,7 @@ class Chess_piece
       if !board[row + direction][column + 1].nil? && board[row + direction][column + 1].type == :pawn
         final_moves.delete(move) if board[row + direction][column + 1].colour == :black 
       end
-      if !board[row + direction][column - 1].nil? && board[row + direction][column - 1].type == :pawn
+      if !board[row + direction][column - 1].nil? && board[row + direction][column - 1].type == :pawn && column - 1 > 0
         final_moves.delete(move) if board[row + direction][column - 1].colour == :black 
       end
     end
