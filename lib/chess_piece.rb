@@ -219,7 +219,6 @@ class Chess_piece
     end
 
     #En_passant
-    #Here should be logic, which check if en passant move will open this player king to attack
     [-1, 1].each do |side|
       if !board[row][column + side].nil? && board[row][column + side].colour != self.colour && board[row][column + side].en_passant
         moves << [row + direction, column + side]

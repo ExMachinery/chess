@@ -26,12 +26,12 @@ class UI
       row.each_with_index do |val, j|
         if val
           case val.type
-          when :pawn then piece = val.colour == :white ? "\u265F" : piece = "\e[38;2;102;102;235m\u265F"
-          when :king then piece = val.colour == :white ? "\u265A" : piece = "\e[38;2;102;102;235m\u265A"
-          when :queen then piece = val.colour == :white ? "\u265B" : piece = "\e[38;2;102;102;235m\u265B"
-          when :rook then piece = val.colour == :white ? "\u265C" : piece = "\e[38;2;102;102;235m\u265C"
-          when :bishop then piece = val.colour == :white ? "\u265D" : piece = "\e[38;2;102;102;235m\u265D"
-          when :knight then piece = val.colour == :white ? "\u265E" : piece = "\e[38;2;102;102;235m\u265E"
+          when :pawn then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265F" : "\e[38;2;102;102;235m\u265F"
+          when :king then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265A" : "\e[38;2;102;102;235m\u265A"
+          when :queen then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265B" : "\e[38;2;102;102;235m\u265B"
+          when :rook then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265C" : "\e[38;2;102;102;235m\u265C"
+          when :bishop then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265D" : "\e[38;2;102;102;235m\u265D"
+          when :knight then piece = val.colour == :white ? "\e[38;2;255;255;255m\u265E" : "\e[38;2;102;102;235m\u265E"
           end
         else
           piece = " "
