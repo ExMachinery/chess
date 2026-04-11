@@ -4,7 +4,7 @@ require_relative 'player'
 
 class UI
   def initialize
-    
+    # IM THE MIGHTY UI! I DONT NEED ANY INSTANCE VARIABLES!
   end
 
   def get_new_players_name
@@ -215,6 +215,6 @@ class UI
   end
 
   def clear
-    # system("clear")
+    system("clear")
   end
 end

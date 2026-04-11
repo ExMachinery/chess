@@ -31,6 +31,10 @@ class Board
       @state[side][4] = Chess_piece.new(:king, colour, [side, 4])
     end
     @number_of_pieces = 32
+    @game.white_king = [7, 4]
+    @game.black_king = [0, 4]
+    @game.white_king_attacked_by = nil
+    @game.black_king_attacked_by = nil
   end
 
   def process_draw_condition

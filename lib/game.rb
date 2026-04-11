@@ -6,7 +6,7 @@ require_relative 'chess_piece'
 class Game
   attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by, :exit
   def initialize(instruction = nil)
-    if instruction == :test # Delete this when done
+    if instruction == :test # I'm leaving this for possible future testing
       @ui = UI.new
       @board = Board.new(@ui, self)
       @p1 = Player.new("Big Beaver", :white)
@@ -22,11 +22,9 @@ class Game
           @board.load_board
         else
           @board.prepare_for_new_game
-          @white_king = [7, 4]
-          @black_king = [0, 4]
-          @white_king_attacked_by = nil
-          @black_king_attacked_by = nil
         end
+      else
+        @board.prepare_for_new_game
       end
     end
   end
@@ -303,10 +301,11 @@ class Game
   end
 
   def ensure_transition(pieces)
-    pick = nil
-    moves = nil
-    checked = false
+    pick, moves = nil, nil
+    piece_blocked, checked = false, false
     until checked
+      @ui.clear
+      @ui.alert_piece_block(pick, @board.state) if piece_blocked
       @ui.render_board(@board.state)
       @ui.alert_check if @board.state[@white_king[0]][@white_king[1]].under_attack || @board.state[@black_king[0]][@black_king[1]].under_attack
       @ui.print_piecelist(pieces, @board.state)
@@ -317,8 +316,7 @@ class Game
       end
       moves = @board.state[pick[0]][pick[1]].get_moves(pick, @board.state)
       if moves.empty?
-        @ui.clear
-        @ui.alert_piece_block(pick, @board.state)
+        piece_blocked = true
       else
         checked = true
       end
@@ -330,5 +328,6 @@ class Game
     x, y = position[0], position[1]
     player_choice = @ui.choose_piece
     board[x][y] = Chess_piece.new(player_choice, @board.turn, [x, y])
+    board[x][y].castling = nil
   end
 end
