@@ -297,7 +297,6 @@ class Chess_piece
   def exclude_dangerous_king_moves(moves, board)
     final_moves = moves.dup
     moves.each do |move|
-      puts "bishop: #{get_bishop_moves(move, board, :for_king)}, knight: #{get_knight_moves(move, board, :for_king)}, rook: #{get_rook_moves(move, board, :for_king)}, king: #{get_king_moves(move, board, :for_king)}"
       if get_bishop_moves(move, board, :for_king) || get_knight_moves(move, board, :for_king) 
         || get_rook_moves(move, board, :for_king) || get_king_moves(move, board, :for_king)
         final_moves.delete(move)

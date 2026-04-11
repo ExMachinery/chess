@@ -1,6 +1,6 @@
 require_relative 'chess_piece'
 class Board
-  attr_accessor :state, :turn, :ui, :game, :halfmove, :fullmove, :number_of_pieces
+  attr_accessor :state, :turn, :ui, :game, :halfmove, :fullmove, :number_of_pieces, :draw_type
   def initialize(ui, game)
     @ui = ui
     @game = game
@@ -9,6 +9,7 @@ class Board
     @halfmove = 0 # 100 means draw
     @fullmove = 1
     @number_of_pieces = 0
+    @draw_type = nil
   end
 
   def prepare_for_new_game
@@ -34,9 +35,13 @@ class Board
 
   def process_draw_condition
     counter = 0
+    high_pieces = []
     @state.each do |row|
       row.each do |piece|
-        counter += 1 if piece
+        if piece
+          counter += 1
+          high_pieces << piece.type if [:rook, :knight, :bishop, :queen].include?(piece.type)
+        end
       end
     end
     if counter == @number_of_pieces
@@ -44,6 +49,9 @@ class Board
     else
       @number_of_pieces = counter
       @halfmove = 0
+    end
+    if @number_of_pieces <= 3
+      @draw_type = :insufficient_material if high_pieces.include?(:bishop) || high_pieces.include?(:knight)
     end
   end
 

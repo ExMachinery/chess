@@ -4,7 +4,7 @@ require_relative 'ui'
 require_relative 'chess_piece'
 
 class Game
-  attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by
+  attr_accessor :ui, :board, :p1, :p2, :white_king, :black_king, :white_king_attacked_by, :black_king_attacked_by, :exit
   def initialize(instruction = nil)
     if instruction == :test # Delete this when done
       @ui = UI.new
@@ -47,8 +47,13 @@ class Game
         until passed
           decision = process_player_decision(@board.state, pieces)
           pick, destination = decision[0], decision[1]
+          if pick == :exit
+            @exit = true
+            break
+          end
           passed = process_temporary_state(pick, destination, pieces, @board.state)
         end
+        next if @exit
 
         transited_piece = @board.state[destination[0]][destination[1]]
         manage_transit(@board.state, pick, destination, transited_piece)
@@ -57,20 +62,24 @@ class Game
         @board.fullmove += 1 if @board.turn == :white && @board.fullmove != 1
         @board.process_draw_condition
         @board.save_board
-      when :stalemate, :draw_by_halfmove_rule
+      when :stalemate, :draw_by_halfmove_rule, :insufficient_material
         # Draw condition
         @ui.render_board(@board.state)
-        result = king_condition == :stalemate ? "Stalemate. Draw!" : "Draw by halfmove rule!"
-        puts "#{result}"
-        File.delete("./save/save.yml") if File.exitst?("./save/save.yml")
+        @ui.declare_tie(king_condition)
+        File.delete("./save/save.yml") if File.exist?("./save/save.yml")
         system("exit")
         break
       when :checkmate
         # Winning condition
         @ui.render_board(@board.state)
-        winner = @white_king_attacked_by ? "White" : "Black"
-        puts "Checkmate. #{winner} is won!"
-        File.delete("./save/save.yml") if File.exitst?("./save/save.yml")
+        winner = @white_king_attacked_by ? :white : :black
+        @ui.declare_win(winner)
+        File.delete("./save/save.yml") if File.exist?("./save/save.yml")
+        system("exit")
+        break
+      when :exit
+        # Exit condition
+        @ui.goodbye
         system("exit")
         break
       end
@@ -123,8 +132,7 @@ class Game
     end    
   end
 
-  def inspect_check_condition(board) # ЭТА ЕБАНИНА ОПЯТЬ ГОВОРИТ ЧТО КОРОЛЬ ПОД ШАХОМ БЛЯТЬ!!!!!!!!
-    puts "its me?"
+  def inspect_check_condition(board)
     inspection_result = false
     king = board.turn == :white ? @white_king : @black_king
     x, y = king[0], king[1]
@@ -178,8 +186,7 @@ class Game
       transition = ensure_transition(pieces)
       pick, moves = transition[0], transition[1]
       if pick == :exit
-        # Here check for "Exit & Save the game" needed
-        system("exit") # Temporary
+        return [:exit, nil]
       end
       
       @ui.clear
@@ -224,6 +231,8 @@ class Game
       end
     end
     condition = :draw_by_halfmove_rule if board.halfmove > 100
+    condition = board.draw_type if board.draw_type
+    condition = :exit if @exit
     condition
   end
 

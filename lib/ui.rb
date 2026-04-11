@@ -197,6 +197,23 @@ class UI
     valid == 1 ? true : false
   end
 
+  def declare_tie(type)
+    result = case type
+    when :stalemate then "Stalemate. Draw!"
+    when :draw_by_halfmove_rule then "Draw by halfmove rule!"
+    when :insufficient_material then "Draw! Checkmate is impossible."
+    end
+    puts "#{result}"
+  end
+
+  def declare_win(winner)
+    puts "Checkmate. #{winner.to_s} is won!"
+  end
+
+  def goodbye
+    puts "Game saved! Have a nice day!"
+  end
+
   def clear
     # system("clear")
   end
